@@ -8,6 +8,7 @@ export const INITIAL_STATS = {
     accentOptional: false,
     pronounOrder: 'standard',
     genderFilter: null,
+    pronounGender: 'lui',
   },
   stats: {},
   history: [],

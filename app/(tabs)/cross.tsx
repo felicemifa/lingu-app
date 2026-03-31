@@ -8,7 +8,8 @@ import {
   ScrollView,
   SafeAreaView,
 } from 'react-native';
-import { VERBS, TENSE_LABELS, TENSE_KEYS } from '../../data/verbs';
+import { VERBS } from '../../data/verbs';
+import { TENSES } from '../../constants/tenses';
 import { PRONOUN_ORDERS } from '../../constants/pronouns';
 import { checkAnswer, formatAnswer } from '../../utils/checkAnswer';
 import { loadStats, recordResult } from '../../data/stats';
@@ -20,13 +21,19 @@ function pickRandom() {
   return VERBS[Math.floor(Math.random() * VERBS.length)];
 }
 
+function getVerbTenseKeys(verb) {
+  return Object.keys(verb.tenses);
+}
+
 export default function CrossScreen() {
   const [currentVerb, setCurrentVerb] = useState(pickRandom);
   const [selectedPronounIndex, setSelectedPronounIndex] = useState(0);
-  const [inputs, setInputs] = useState(TENSE_KEYS.map(() => ''));
-  const [showAnswers, setShowAnswers] = useState(false);
   const [accentOptional, setAccentOptional] = useState(false);
-  const inputRefs = useRef(TENSE_KEYS.map(() => React.createRef()));
+
+  const tenseKeys = getVerbTenseKeys(currentVerb);
+  const [inputs, setInputs] = useState(tenseKeys.map(() => ''));
+  const [showAnswers, setShowAnswers] = useState(false);
+  const inputRefs = useRef(tenseKeys.map(() => React.createRef()));
 
   useEffect(() => {
     loadStats().then((data) => {
@@ -34,12 +41,12 @@ export default function CrossScreen() {
     });
   }, []);
 
-  const pronoun = PRONOUNS[selectedPronounIndex];
-
   const getCorrectAnswer = (tenseIndex) => {
-    const tenseKey = TENSE_KEYS[tenseIndex];
-    return currentVerb.tenses[tenseKey][selectedPronounIndex];
+    const tenseKey = tenseKeys[tenseIndex];
+    return currentVerb.tenses[tenseKey].forms[selectedPronounIndex];
   };
+
+  const isNullForm = (tenseIndex) => getCorrectAnswer(tenseIndex) === null;
 
   const handleChangeText = (text, index) => {
     const next = [...inputs];
@@ -48,17 +55,20 @@ export default function CrossScreen() {
   };
 
   const handleSubmitEditing = (index) => {
-    if (index < TENSE_KEYS.length - 1) {
-      inputRefs.current[index + 1]?.current?.focus();
-    } else {
-      inputRefs.current[index]?.current?.blur();
+    for (let i = index + 1; i < tenseKeys.length; i++) {
+      if (!isNullForm(i)) {
+        inputRefs.current[i]?.current?.focus();
+        return;
+      }
     }
+    inputRefs.current[index]?.current?.blur();
   };
 
   const handleShowAnswers = useCallback(() => {
     setShowAnswers(true);
-    TENSE_KEYS.forEach((tenseKey, i) => {
+    tenseKeys.forEach((tenseKey, i) => {
       const correct = getCorrectAnswer(i);
+      if (correct === null) return;
       const isRight = checkAnswer(inputs[i], correct, accentOptional) ? 1 : 0;
       recordResult({
         language: currentVerb.language,
@@ -68,24 +78,43 @@ export default function CrossScreen() {
         total: 1,
       });
     });
-  }, [inputs, accentOptional, currentVerb, selectedPronounIndex]);
+  }, [inputs, accentOptional, currentVerb, selectedPronounIndex, tenseKeys]);
 
   const handleRestart = useCallback(() => {
-    setCurrentVerb(pickRandom());
-    setInputs(TENSE_KEYS.map(() => ''));
+    const newVerb = pickRandom();
+    setCurrentVerb(newVerb);
+    const newKeys = getVerbTenseKeys(newVerb);
+    setInputs(newKeys.map(() => ''));
     setShowAnswers(false);
-    setTimeout(() => inputRefs.current[0]?.current?.focus(), 100);
-  }, []);
+    inputRefs.current = newKeys.map(() => React.createRef());
+    setTimeout(() => {
+      for (let i = 0; i < newKeys.length; i++) {
+        if (newVerb.tenses[newKeys[i]].forms[selectedPronounIndex] !== null) {
+          inputRefs.current[i]?.current?.focus();
+          break;
+        }
+      }
+    }, 100);
+  }, [selectedPronounIndex]);
 
   const handleSelectPronoun = (index) => {
     setSelectedPronounIndex(index);
-    setInputs(TENSE_KEYS.map(() => ''));
+    setInputs(tenseKeys.map(() => ''));
     setShowAnswers(false);
-    setTimeout(() => inputRefs.current[0]?.current?.focus(), 100);
+    setTimeout(() => {
+      for (let i = 0; i < tenseKeys.length; i++) {
+        if (currentVerb.tenses[tenseKeys[i]].forms[index] !== null) {
+          inputRefs.current[i]?.current?.focus();
+          break;
+        }
+      }
+    }, 100);
   };
 
-  const isCorrect = (tenseIndex) =>
-    checkAnswer(inputs[tenseIndex], getCorrectAnswer(tenseIndex), accentOptional);
+  const isCorrect = (tenseIndex) => {
+    const correct = getCorrectAnswer(tenseIndex);
+    return correct !== null && checkAnswer(inputs[tenseIndex], correct, accentOptional);
+  };
 
   const getInputColor = (index) => {
     if (!showAnswers) return '#333333';
@@ -137,42 +166,56 @@ export default function CrossScreen() {
         contentContainerStyle={styles.formContent}
         keyboardShouldPersistTaps="handled"
       >
-        {TENSE_KEYS.map((tenseKey, index) => (
-          <View key={tenseKey} style={styles.row}>
-            <Text style={styles.tenseLabel}>{TENSE_LABELS[tenseKey]}</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                ref={inputRefs.current[index]}
-                value={inputs[index]}
-                onChangeText={(text) => handleChangeText(text, index)}
-                onSubmitEditing={() => handleSubmitEditing(index)}
-                returnKeyType={index < TENSE_KEYS.length - 1 ? 'next' : 'done'}
-                autoCapitalize="none"
-                autoCorrect={false}
-                editable={!showAnswers}
-                style={[styles.textInput, { color: getInputColor(index) }]}
-              />
-              <View
-                style={[
-                  styles.underline,
-                  { backgroundColor: getUnderlineColor(index) },
-                ]}
-              />
-              {showAnswers && (
-                <Text
-                  style={[
-                    styles.feedback,
-                    { color: isCorrect(index) ? '#4CAF50' : '#E53935' },
-                  ]}
-                >
-                  {isCorrect(index)
-                    ? '✓'
-                    : formatAnswer(getCorrectAnswer(index))}
-                </Text>
-              )}
+        {tenseKeys.map((tenseKey, index) => {
+          const nullForm = isNullForm(index);
+          return (
+            <View key={tenseKey} style={styles.row}>
+              <Text style={[styles.tenseLabel, nullForm && styles.tenseLabelDisabled]}>
+                {TENSES[tenseKey].label}
+              </Text>
+              <View style={styles.inputWrapper}>
+                {nullForm ? (
+                  <>
+                    <Text style={styles.nullPlaceholder}>—</Text>
+                    <View style={[styles.underline, { backgroundColor: '#EEEEEE' }]} />
+                  </>
+                ) : (
+                  <>
+                    <TextInput
+                      ref={inputRefs.current[index]}
+                      value={inputs[index]}
+                      onChangeText={(text) => handleChangeText(text, index)}
+                      onSubmitEditing={() => handleSubmitEditing(index)}
+                      returnKeyType="next"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={!showAnswers}
+                      style={[styles.textInput, { color: getInputColor(index) }]}
+                    />
+                    <View
+                      style={[
+                        styles.underline,
+                        { backgroundColor: getUnderlineColor(index) },
+                      ]}
+                    />
+                    {showAnswers && (
+                      <Text
+                        style={[
+                          styles.feedback,
+                          { color: isCorrect(index) ? '#4CAF50' : '#E53935' },
+                        ]}
+                      >
+                        {isCorrect(index)
+                          ? '✓'
+                          : formatAnswer(getCorrectAnswer(index))}
+                      </Text>
+                    )}
+                  </>
+                )}
+              </View>
             </View>
-          </View>
-        ))}
+          );
+        })}
       </ScrollView>
 
       {/* ボタン */}
@@ -271,6 +314,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     fontFamily: F.regular,
   },
+  tenseLabelDisabled: {
+    color: '#CCCCCC',
+  },
   inputWrapper: {
     position: 'relative',
   },
@@ -280,6 +326,12 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
     paddingRight: 36,
     color: '#333333',
+  },
+  nullPlaceholder: {
+    fontSize: 16,
+    fontFamily: F.regular,
+    color: '#CCCCCC',
+    paddingBottom: 6,
   },
   underline: {
     height: 1,

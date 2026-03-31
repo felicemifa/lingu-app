@@ -9,7 +9,8 @@ import {
   SafeAreaView,
   Modal,
 } from 'react-native';
-import { VERBS, TENSE_LABELS, TENSE_KEYS } from '../../data/verbs';
+import { VERBS } from '../../data/verbs';
+import { TENSES } from '../../constants/tenses';
 import { PRONOUN_ORDERS } from '../../constants/pronouns';
 import { checkAnswer, formatAnswer } from '../../utils/checkAnswer';
 import { loadStats, recordResult } from '../../data/stats';
@@ -19,6 +20,10 @@ const PRONOUNS = PRONOUN_ORDERS.standard;
 
 function pickRandom() {
   return VERBS[Math.floor(Math.random() * VERBS.length)];
+}
+
+function getVerbTenseKeys(verb) {
+  return Object.keys(verb.tenses);
 }
 
 export default function PracticeScreen() {
@@ -36,7 +41,9 @@ export default function PracticeScreen() {
     });
   }, []);
 
-  const answers = currentVerb.tenses[tense];
+  const tenseData = currentVerb.tenses[tense];
+  const forms = tenseData.forms;
+  const availableTenseKeys = getVerbTenseKeys(currentVerb);
 
   const handleChangeText = (text, index) => {
     const next = [...inputs];
@@ -45,17 +52,24 @@ export default function PracticeScreen() {
   };
 
   const handleSubmitEditing = (index) => {
-    if (index < 5) {
-      inputRefs.current[index + 1]?.current?.focus();
-    } else {
-      inputRefs.current[index]?.current?.blur();
+    // Find next editable index
+    for (let i = index + 1; i < 6; i++) {
+      if (forms[i] !== null) {
+        inputRefs.current[i]?.current?.focus();
+        return;
+      }
     }
+    inputRefs.current[index]?.current?.blur();
   };
 
   const handleShowAnswers = useCallback(() => {
     setShowAnswers(true);
-    const score = answers.reduce(
-      (acc, ans, i) => acc + (checkAnswer(inputs[i], ans, accentOptional) ? 1 : 0),
+    const scorable = forms.filter((f) => f !== null);
+    const score = forms.reduce(
+      (acc, form, i) => {
+        if (form === null) return acc;
+        return acc + (checkAnswer(inputs[i], form, accentOptional) ? 1 : 0);
+      },
       0,
     );
     recordResult({
@@ -63,26 +77,45 @@ export default function PracticeScreen() {
       verbId: currentVerb.id,
       tense,
       score,
-      total: 6,
+      total: scorable.length,
     });
-  }, [answers, inputs, accentOptional, currentVerb, tense]);
+  }, [forms, inputs, accentOptional, currentVerb, tense]);
 
   const handleRestart = useCallback(() => {
-    setCurrentVerb(pickRandom());
+    const newVerb = pickRandom();
+    setCurrentVerb(newVerb);
+    // Reset tense to first available if current tense doesn't exist on new verb
+    setTense((prev) => (newVerb.tenses[prev] ? prev : Object.keys(newVerb.tenses)[0]));
     setInputs(['', '', '', '', '', '']);
     setShowAnswers(false);
-    setTimeout(() => inputRefs.current[0]?.current?.focus(), 100);
-  }, []);
+    setTimeout(() => {
+      for (let i = 0; i < 6; i++) {
+        if (newVerb.tenses[tense]?.forms[i] !== null) {
+          inputRefs.current[i]?.current?.focus();
+          break;
+        }
+      }
+    }, 100);
+  }, [tense]);
 
   const handleSelectTense = (key) => {
     setTense(key);
     setInputs(['', '', '', '', '', '']);
     setShowAnswers(false);
     setTenseModalVisible(false);
-    setTimeout(() => inputRefs.current[0]?.current?.focus(), 100);
+    setTimeout(() => {
+      const newForms = currentVerb.tenses[key].forms;
+      for (let i = 0; i < 6; i++) {
+        if (newForms[i] !== null) {
+          inputRefs.current[i]?.current?.focus();
+          break;
+        }
+      }
+    }, 100);
   };
 
-  const isCorrect = (index) => checkAnswer(inputs[index], answers[index], accentOptional);
+  const isCorrect = (index) =>
+    forms[index] !== null && checkAnswer(inputs[index], forms[index], accentOptional);
 
   const getInputColor = (index) => {
     if (!showAnswers) return '#333333';
@@ -111,7 +144,7 @@ export default function PracticeScreen() {
           )}
           <Text style={styles.tense}>
             {currentVerb.irregular ? ' / ' : ''}
-            {TENSE_LABELS[tense]}
+            {TENSES[tense].label}
           </Text>
           <Text style={styles.chevron}> ▾</Text>
         </TouchableOpacity>
@@ -131,25 +164,27 @@ export default function PracticeScreen() {
         >
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>時制を選択</Text>
-            {TENSE_KEYS.map((key) => (
-              <TouchableOpacity
-                key={key}
-                style={[
-                  styles.modalItem,
-                  key === tense && styles.modalItemActive,
-                ]}
-                onPress={() => handleSelectTense(key)}
-              >
-                <Text
+            <ScrollView style={styles.modalScroll}>
+              {availableTenseKeys.map((key) => (
+                <TouchableOpacity
+                  key={key}
                   style={[
-                    styles.modalItemText,
-                    key === tense && styles.modalItemTextActive,
+                    styles.modalItem,
+                    key === tense && styles.modalItemActive,
                   ]}
+                  onPress={() => handleSelectTense(key)}
                 >
-                  {TENSE_LABELS[key]}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text
+                    style={[
+                      styles.modalItemText,
+                      key === tense && styles.modalItemTextActive,
+                    ]}
+                  >
+                    {TENSES[key].label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
         </TouchableOpacity>
       </Modal>
@@ -160,40 +195,59 @@ export default function PracticeScreen() {
         contentContainerStyle={styles.formContent}
         keyboardShouldPersistTaps="handled"
       >
-        {PRONOUNS.map((pronoun, index) => (
-          <View key={pronoun} style={styles.row}>
-            <Text style={styles.pronoun}>{pronoun}</Text>
-            <View style={styles.inputWrapper}>
-              <TextInput
-                ref={inputRefs.current[index]}
-                value={inputs[index]}
-                onChangeText={(text) => handleChangeText(text, index)}
-                onSubmitEditing={() => handleSubmitEditing(index)}
-                returnKeyType={index < 5 ? 'next' : 'done'}
-                autoCapitalize="none"
-                autoCorrect={false}
-                editable={!showAnswers}
-                style={[styles.textInput, { color: getInputColor(index) }]}
-              />
-              <View
+        {PRONOUNS.map((pronoun, index) => {
+          const isNull = forms[index] === null;
+          return (
+            <View key={pronoun} style={styles.row}>
+              <Text
                 style={[
-                  styles.underline,
-                  { backgroundColor: getUnderlineColor(index) },
+                  styles.pronoun,
+                  isNull && styles.pronounDisabled,
                 ]}
-              />
-              {showAnswers && (
-                <Text
-                  style={[
-                    styles.feedback,
-                    { color: isCorrect(index) ? '#4CAF50' : '#E53935' },
-                  ]}
-                >
-                  {isCorrect(index) ? '✓' : formatAnswer(answers[index])}
-                </Text>
-              )}
+              >
+                {pronoun}
+              </Text>
+              <View style={styles.inputWrapper}>
+                {isNull ? (
+                  <>
+                    <Text style={styles.nullPlaceholder}>—</Text>
+                    <View style={[styles.underline, { backgroundColor: '#EEEEEE' }]} />
+                  </>
+                ) : (
+                  <>
+                    <TextInput
+                      ref={inputRefs.current[index]}
+                      value={inputs[index]}
+                      onChangeText={(text) => handleChangeText(text, index)}
+                      onSubmitEditing={() => handleSubmitEditing(index)}
+                      returnKeyType="next"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={!showAnswers}
+                      style={[styles.textInput, { color: getInputColor(index) }]}
+                    />
+                    <View
+                      style={[
+                        styles.underline,
+                        { backgroundColor: getUnderlineColor(index) },
+                      ]}
+                    />
+                    {showAnswers && (
+                      <Text
+                        style={[
+                          styles.feedback,
+                          { color: isCorrect(index) ? '#4CAF50' : '#E53935' },
+                        ]}
+                      >
+                        {isCorrect(index) ? '✓' : formatAnswer(forms[index])}
+                      </Text>
+                    )}
+                  </>
+                )}
+              </View>
             </View>
-          </View>
-        ))}
+          );
+        })}
       </ScrollView>
 
       {/* ボタン */}
@@ -282,11 +336,14 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   pronoun: {
-    width: 48,
+    width: 64,
     fontSize: 15,
     color: '#888888',
     paddingBottom: 6,
     fontFamily: F.regular,
+  },
+  pronounDisabled: {
+    color: '#CCCCCC',
   },
   inputWrapper: {
     flex: 1,
@@ -298,6 +355,12 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
     paddingRight: 36,
     color: '#333333',
+  },
+  nullPlaceholder: {
+    fontSize: 16,
+    fontFamily: F.regular,
+    color: '#CCCCCC',
+    paddingBottom: 6,
   },
   underline: {
     height: 1,
@@ -353,6 +416,7 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 24,
     width: 280,
+    maxHeight: '70%',
   },
   modalTitle: {
     fontSize: 17,
@@ -360,6 +424,9 @@ const styles = StyleSheet.create({
     color: '#333333',
     marginBottom: 16,
     textAlign: 'center',
+  },
+  modalScroll: {
+    flexGrow: 0,
   },
   modalItem: {
     paddingVertical: 14,
