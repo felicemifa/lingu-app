@@ -7,7 +7,6 @@ import {
   StyleSheet,
   ScrollView,
   SafeAreaView,
-  Modal,
 } from 'react-native';
 import { VERBS, TENSE_LABELS, TENSE_KEYS } from '../../data/verbs';
 import { PRONOUN_ORDERS } from '../../constants/pronouns';
@@ -21,14 +20,13 @@ function pickRandom() {
   return VERBS[Math.floor(Math.random() * VERBS.length)];
 }
 
-export default function PracticeScreen() {
+export default function CrossScreen() {
   const [currentVerb, setCurrentVerb] = useState(pickRandom);
-  const [tense, setTense] = useState('presente');
-  const [inputs, setInputs] = useState(['', '', '', '', '', '']);
+  const [selectedPronounIndex, setSelectedPronounIndex] = useState(0);
+  const [inputs, setInputs] = useState(TENSE_KEYS.map(() => ''));
   const [showAnswers, setShowAnswers] = useState(false);
-  const [tenseModalVisible, setTenseModalVisible] = useState(false);
   const [accentOptional, setAccentOptional] = useState(false);
-  const inputRefs = useRef([...Array(6)].map(() => React.createRef()));
+  const inputRefs = useRef(TENSE_KEYS.map(() => React.createRef()));
 
   useEffect(() => {
     loadStats().then((data) => {
@@ -36,7 +34,12 @@ export default function PracticeScreen() {
     });
   }, []);
 
-  const answers = currentVerb.tenses[tense];
+  const pronoun = PRONOUNS[selectedPronounIndex];
+
+  const getCorrectAnswer = (tenseIndex) => {
+    const tenseKey = TENSE_KEYS[tenseIndex];
+    return currentVerb.tenses[tenseKey][selectedPronounIndex];
+  };
 
   const handleChangeText = (text, index) => {
     const next = [...inputs];
@@ -45,7 +48,7 @@ export default function PracticeScreen() {
   };
 
   const handleSubmitEditing = (index) => {
-    if (index < 5) {
+    if (index < TENSE_KEYS.length - 1) {
       inputRefs.current[index + 1]?.current?.focus();
     } else {
       inputRefs.current[index]?.current?.blur();
@@ -54,35 +57,35 @@ export default function PracticeScreen() {
 
   const handleShowAnswers = useCallback(() => {
     setShowAnswers(true);
-    const score = answers.reduce(
-      (acc, ans, i) => acc + (checkAnswer(inputs[i], ans, accentOptional) ? 1 : 0),
-      0,
-    );
-    recordResult({
-      language: currentVerb.language,
-      verbId: currentVerb.id,
-      tense,
-      score,
-      total: 6,
+    TENSE_KEYS.forEach((tenseKey, i) => {
+      const correct = getCorrectAnswer(i);
+      const isRight = checkAnswer(inputs[i], correct, accentOptional) ? 1 : 0;
+      recordResult({
+        language: currentVerb.language,
+        verbId: currentVerb.id,
+        tense: tenseKey,
+        score: isRight,
+        total: 1,
+      });
     });
-  }, [answers, inputs, accentOptional, currentVerb, tense]);
+  }, [inputs, accentOptional, currentVerb, selectedPronounIndex]);
 
   const handleRestart = useCallback(() => {
     setCurrentVerb(pickRandom());
-    setInputs(['', '', '', '', '', '']);
+    setInputs(TENSE_KEYS.map(() => ''));
     setShowAnswers(false);
     setTimeout(() => inputRefs.current[0]?.current?.focus(), 100);
   }, []);
 
-  const handleSelectTense = (key) => {
-    setTense(key);
-    setInputs(['', '', '', '', '', '']);
+  const handleSelectPronoun = (index) => {
+    setSelectedPronounIndex(index);
+    setInputs(TENSE_KEYS.map(() => ''));
     setShowAnswers(false);
-    setTenseModalVisible(false);
     setTimeout(() => inputRefs.current[0]?.current?.focus(), 100);
   };
 
-  const isCorrect = (index) => checkAnswer(inputs[index], answers[index], accentOptional);
+  const isCorrect = (tenseIndex) =>
+    checkAnswer(inputs[tenseIndex], getCorrectAnswer(tenseIndex), accentOptional);
 
   const getInputColor = (index) => {
     if (!showAnswers) return '#333333';
@@ -98,78 +101,52 @@ export default function PracticeScreen() {
     <SafeAreaView style={styles.safeArea}>
       {/* ヘッダー */}
       <View style={styles.header}>
-        <View style={styles.headerTitleRow}>
-          <Text style={styles.verbTitle}>{currentVerb.name}</Text>
-        </View>
-        <TouchableOpacity
-          style={styles.headerSubRow}
-          onPress={() => setTenseModalVisible(true)}
-          activeOpacity={0.7}
-        >
-          {currentVerb.irregular && (
-            <Text style={styles.irregular}>irregolare</Text>
-          )}
-          <Text style={styles.tense}>
-            {currentVerb.irregular ? ' / ' : ''}
-            {TENSE_LABELS[tense]}
-          </Text>
-          <Text style={styles.chevron}> ▾</Text>
-        </TouchableOpacity>
+        <Text style={styles.verbTitle}>{currentVerb.name}</Text>
+        {currentVerb.irregular && (
+          <Text style={styles.irregular}>irregolare</Text>
+        )}
       </View>
 
-      {/* 時制選択モーダル */}
-      <Modal
-        visible={tenseModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setTenseModalVisible(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setTenseModalVisible(false)}
-        >
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>時制を選択</Text>
-            {TENSE_KEYS.map((key) => (
-              <TouchableOpacity
-                key={key}
-                style={[
-                  styles.modalItem,
-                  key === tense && styles.modalItemActive,
-                ]}
-                onPress={() => handleSelectTense(key)}
-              >
-                <Text
-                  style={[
-                    styles.modalItemText,
-                    key === tense && styles.modalItemTextActive,
-                  ]}
-                >
-                  {TENSE_LABELS[key]}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </TouchableOpacity>
-      </Modal>
+      {/* 人称選択チップ */}
+      <View style={styles.chipRow}>
+        {PRONOUNS.map((p, i) => (
+          <TouchableOpacity
+            key={p}
+            style={[
+              styles.chip,
+              i === selectedPronounIndex && styles.chipActive,
+            ]}
+            onPress={() => handleSelectPronoun(i)}
+            activeOpacity={0.7}
+          >
+            <Text
+              style={[
+                styles.chipText,
+                i === selectedPronounIndex && styles.chipTextActive,
+              ]}
+            >
+              {p}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
-      {/* 入力フォーム */}
+      {/* 時制ごとの入力フォーム */}
       <ScrollView
         style={styles.formScroll}
         contentContainerStyle={styles.formContent}
         keyboardShouldPersistTaps="handled"
       >
-        {PRONOUNS.map((pronoun, index) => (
-          <View key={pronoun} style={styles.row}>
-            <Text style={styles.pronoun}>{pronoun}</Text>
+        {TENSE_KEYS.map((tenseKey, index) => (
+          <View key={tenseKey} style={styles.row}>
+            <Text style={styles.tenseLabel}>{TENSE_LABELS[tenseKey]}</Text>
             <View style={styles.inputWrapper}>
               <TextInput
                 ref={inputRefs.current[index]}
                 value={inputs[index]}
                 onChangeText={(text) => handleChangeText(text, index)}
                 onSubmitEditing={() => handleSubmitEditing(index)}
-                returnKeyType={index < 5 ? 'next' : 'done'}
+                returnKeyType={index < TENSE_KEYS.length - 1 ? 'next' : 'done'}
                 autoCapitalize="none"
                 autoCorrect={false}
                 editable={!showAnswers}
@@ -188,7 +165,9 @@ export default function PracticeScreen() {
                     { color: isCorrect(index) ? '#4CAF50' : '#E53935' },
                   ]}
                 >
-                  {isCorrect(index) ? '✓' : formatAnswer(answers[index])}
+                  {isCorrect(index)
+                    ? '✓'
+                    : formatAnswer(getCorrectAnswer(index))}
                 </Text>
               )}
             </View>
@@ -236,60 +215,63 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: '#F4FAE8',
-    paddingVertical: 24,
+    paddingVertical: 20,
     alignItems: 'center',
-  },
-  headerTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
   },
   verbTitle: {
     fontSize: 28,
     fontFamily: F.bold,
     color: '#333333',
   },
-  headerSubRow: {
-    flexDirection: 'row',
-    marginTop: 4,
-    alignItems: 'center',
-  },
   irregular: {
     fontSize: 15,
     color: '#E57373',
     fontFamily: F.regular,
+    marginTop: 4,
   },
-  tense: {
+  chipRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F0F0F0',
+  },
+  chipActive: {
+    backgroundColor: '#4CAF50',
+  },
+  chipText: {
     fontSize: 15,
     color: '#666666',
     fontFamily: F.regular,
   },
-  chevron: {
-    fontSize: 14,
-    color: '#4CAF50',
+  chipTextActive: {
+    color: '#FFFFFF',
+    fontFamily: F.semiBold,
   },
   formScroll: {
     flex: 1,
   },
   formContent: {
     paddingHorizontal: 32,
-    paddingVertical: 16,
-    gap: 8,
+    paddingVertical: 8,
+    gap: 12,
   },
   row: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    marginBottom: 8,
+    marginBottom: 12,
   },
-  pronoun: {
-    width: 48,
-    fontSize: 15,
+  tenseLabel: {
+    fontSize: 13,
     color: '#888888',
-    paddingBottom: 6,
+    marginBottom: 4,
     fontFamily: F.regular,
   },
   inputWrapper: {
-    flex: 1,
     position: 'relative',
   },
   textInput: {
@@ -340,44 +322,5 @@ const styles = StyleSheet.create({
     color: '#4CAF50',
     fontSize: 18,
     fontFamily: FJ.semiBold,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    paddingVertical: 20,
-    paddingHorizontal: 24,
-    width: 280,
-  },
-  modalTitle: {
-    fontSize: 17,
-    fontFamily: FJ.semiBold,
-    color: '#333333',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  modalItem: {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    marginBottom: 4,
-  },
-  modalItemActive: {
-    backgroundColor: '#F4FAE8',
-  },
-  modalItemText: {
-    fontSize: 16,
-    color: '#333333',
-    textAlign: 'center',
-    fontFamily: F.regular,
-  },
-  modalItemTextActive: {
-    color: '#4CAF50',
-    fontFamily: F.semiBold,
   },
 });
