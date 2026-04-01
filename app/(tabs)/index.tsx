@@ -139,11 +139,11 @@ export default function PracticeScreen() {
           onPress={() => setTenseModalVisible(true)}
           activeOpacity={0.7}
         >
-          {currentVerb.irregular && (
-            <Text style={styles.irregular}>irregolare</Text>
-          )}
+          <Text style={currentVerb.irregular ? styles.irregular : styles.regular}>
+            {currentVerb.irregular ? '不規則変化' : '規則変化'}
+          </Text>
           <Text style={styles.tense}>
-            {currentVerb.irregular ? ' / ' : ''}
+            {' / '}
             {TENSES[tense].label}
           </Text>
           <Text style={styles.chevron}> ▾</Text>
@@ -311,7 +311,12 @@ const styles = StyleSheet.create({
   irregular: {
     fontSize: 15,
     color: '#E57373',
-    fontFamily: F.regular,
+    fontFamily: FJ.regular,
+  },
+  regular: {
+    fontSize: 15,
+    color: '#81C784',
+    fontFamily: FJ.regular,
   },
   tense: {
     fontSize: 15,

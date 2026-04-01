@@ -131,9 +131,9 @@ export default function CrossScreen() {
       {/* ヘッダー */}
       <View style={styles.header}>
         <Text style={styles.verbTitle}>{currentVerb.name}</Text>
-        {currentVerb.irregular && (
-          <Text style={styles.irregular}>irregolare</Text>
-        )}
+        <Text style={currentVerb.irregular ? styles.irregular : styles.regular}>
+          {currentVerb.irregular ? '不規則変化' : '規則変化'}
+        </Text>
       </View>
 
       {/* 人称選択チップ */}
@@ -269,7 +269,13 @@ const styles = StyleSheet.create({
   irregular: {
     fontSize: 15,
     color: '#E57373',
-    fontFamily: F.regular,
+    fontFamily: FJ.regular,
+    marginTop: 4,
+  },
+  regular: {
+    fontSize: 15,
+    color: '#81C784',
+    fontFamily: FJ.regular,
     marginTop: 4,
   },
   chipRow: {
