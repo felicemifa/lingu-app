@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,8 +11,11 @@ import {
 import { useRouter } from 'expo-router';
 import { VERBS } from '../../data/verbs';
 import { TENSES, MOOD_LABELS, TIMEFRAME_LABELS } from '../../constants/tenses';
+import { PRONOUN_ORDERS } from '../../constants/pronouns';
 import { setPracticeConfig } from '../../data/practiceConfig';
 import { F, FJ } from '../../constants/fonts';
+
+const PRONOUNS = PRONOUN_ORDERS.standard;
 
 // ── 動詞グループ定義 ──
 const VERB_GROUPS = [
@@ -39,9 +42,10 @@ export default function HomeScreen() {
   const router = useRouter();
 
   // ① 練習パターン
-  const [practiceMode, setPracticeMode] = useState('tense');
+  const [practiceMode, setPracticeMode] = useState('mood');
   const [selectedTimeframes, setSelectedTimeframes] = useState(() => new Set(['present']));
   const [selectedMoods, setSelectedMoods] = useState(() => new Set(['indicative']));
+  const [selectedPronounIndex, setSelectedPronounIndex] = useState(0);
 
   // ③ 詳細設定
   const [includeCompound, setIncludeCompound] = useState(false);
@@ -57,11 +61,20 @@ export default function HomeScreen() {
     () => new Set(IMPLEMENTED_TENSE_KEYS.filter((k) => TENSES[k].type === 'simple')),
   );
 
-  // ── timeframe / mood トグル ──
+  // ── timeframe / mood トグル（時制選択を自動連動） ──
   const toggleTimeframe = (tf) => {
     setSelectedTimeframes((prev) => {
       const next = new Set(prev);
       next.has(tf) ? next.delete(tf) : next.add(tf);
+      // 連動：該当する時制のみ選択
+      const matching = new Set(
+        IMPLEMENTED_TENSE_KEYS.filter((k) => {
+          const t = TENSES[k];
+          if (t.type === 'compound' && !includeCompound) return false;
+          return next.has(t.timeframe);
+        }),
+      );
+      setSelectedTenseKeys(matching);
       return next;
     });
   };
@@ -70,20 +83,18 @@ export default function HomeScreen() {
     setSelectedMoods((prev) => {
       const next = new Set(prev);
       next.has(m) ? next.delete(m) : next.add(m);
+      // 連動：該当する時制のみ選択
+      const matching = new Set(
+        IMPLEMENTED_TENSE_KEYS.filter((k) => {
+          const t = TENSES[k];
+          if (t.type === 'compound' && !includeCompound) return false;
+          return next.has(t.mood);
+        }),
+      );
+      setSelectedTenseKeys(matching);
       return next;
     });
   };
-
-  // ── フィルタで推奨される時制を計算 ──
-  const suggestedTenseKeys = useMemo(() => {
-    return IMPLEMENTED_TENSE_KEYS.filter((k) => {
-      const t = TENSES[k];
-      if (practiceMode === 'tense') {
-        return selectedTimeframes.has(t.timeframe);
-      }
-      return selectedMoods.has(t.mood);
-    });
-  }, [practiceMode, selectedTimeframes, selectedMoods]);
 
   // ── 動詞トグル ──
   const toggleVerb = (id) => {
@@ -130,7 +141,12 @@ export default function HomeScreen() {
   };
 
   // ── スタート可否 ──
-  const hasFilter = practiceMode === 'tense' ? selectedTimeframes.size > 0 : selectedMoods.size > 0;
+  const hasFilter =
+    practiceMode === 'tense'
+      ? selectedTimeframes.size > 0
+      : practiceMode === 'mood'
+        ? selectedMoods.size > 0
+        : true;
   const canStart = selectedVerbIds.size > 0 && selectedTenseKeys.size > 0 && hasFilter;
 
   // ── スタート ──
@@ -138,21 +154,9 @@ export default function HomeScreen() {
     setPracticeConfig({
       selectedVerbIds: [...selectedVerbIds],
       selectedTenseKeys: [...selectedTenseKeys],
+      selectedPronounIndex,
     });
-    router.navigate('/practice');
-  };
-
-  // ── 推奨時制を一括選択 ──
-  const selectSuggestedTenses = () => {
-    setSelectedTenseKeys((prev) => {
-      const next = new Set(prev);
-      suggestedTenseKeys.forEach((k) => {
-        const t = TENSES[k];
-        if (t.type === 'compound' && !includeCompound) return;
-        next.add(k);
-      });
-      return next;
-    });
+    router.navigate(practiceMode === 'person' ? '/cross' : '/practice');
   };
 
   return (
@@ -171,8 +175,9 @@ export default function HomeScreen() {
           <Text style={styles.sectionTitle}>練習パターン</Text>
           <View style={styles.radioRow}>
             {[
-              { key: 'tense', label: '時制で練習' },
               { key: 'mood', label: '法で練習' },
+              { key: 'tense', label: '時制で練習' },
+              { key: 'person', label: '人称ごとに練習' },
             ].map(({ key, label }) => (
               <TouchableOpacity
                 key={key}
@@ -191,7 +196,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* ──── ② フィルタチップ（複数選択） ──── */}
+        {/* ──── ② フィルタチップ ──── */}
         <View style={styles.section}>
           {practiceMode === 'tense' ? (
             <View style={styles.chipRow}>
@@ -211,7 +216,7 @@ export default function HomeScreen() {
                 );
               })}
             </View>
-          ) : (
+          ) : practiceMode === 'mood' ? (
             <View style={styles.chipRow}>
               {MOODS.map((m) => {
                 const active = selectedMoods.has(m);
@@ -229,10 +234,25 @@ export default function HomeScreen() {
                 );
               })}
             </View>
+          ) : (
+            <View style={styles.chipRow}>
+              {PRONOUNS.map((p, i) => {
+                const active = selectedPronounIndex === i;
+                return (
+                  <TouchableOpacity
+                    key={p}
+                    style={[styles.filterChip, styles.filterChipFlex, active && styles.filterChipActive]}
+                    onPress={() => setSelectedPronounIndex(i)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.filterChipText, styles.filterChipTextLatin, active && styles.filterChipTextActive]}>
+                      {p}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           )}
-          <TouchableOpacity onPress={selectSuggestedTenses} style={styles.suggestButton}>
-            <Text style={styles.suggestButtonText}>該当する時制を選択に追加</Text>
-          </TouchableOpacity>
         </View>
 
         {/* ──── ③ 詳細設定 ──── */}
@@ -450,7 +470,9 @@ const styles = StyleSheet.create({
   // ── Radio ──
   radioRow: {
     flexDirection: 'row',
-    gap: 24,
+    flexWrap: 'wrap',
+    gap: 16,
+    rowGap: 12,
   },
   radioItem: {
     flexDirection: 'row',
@@ -509,18 +531,12 @@ const styles = StyleSheet.create({
     fontFamily: FJ.regular,
     color: '#888888',
   },
+  filterChipTextLatin: {
+    fontFamily: F.regular,
+  },
   filterChipTextActive: {
     color: '#FFFFFF',
     fontFamily: FJ.semiBold,
-  },
-  suggestButton: {
-    marginTop: 10,
-    alignSelf: 'flex-start',
-  },
-  suggestButtonText: {
-    fontSize: 13,
-    fontFamily: FJ.regular,
-    color: '#4CAF50',
   },
 
   // ── Toggle ──

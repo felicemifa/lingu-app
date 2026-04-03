@@ -34,10 +34,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="cross"
         options={{
-          title: 'クロス',
-          tabBarIcon: ({ color }) => (
-            <Text style={{ fontSize: 20, color }}>🔀</Text>
-          ),
+          href: null,
         }}
       />
     </Tabs>

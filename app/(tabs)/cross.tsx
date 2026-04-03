@@ -8,26 +8,41 @@ import {
   ScrollView,
   SafeAreaView,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { VERBS } from '../../data/verbs';
 import { TENSES } from '../../constants/tenses';
 import { PRONOUN_ORDERS } from '../../constants/pronouns';
 import { checkAnswer, formatAnswer } from '../../utils/checkAnswer';
 import { loadStats, recordResult } from '../../data/stats';
+import { getPracticeConfig } from '../../data/practiceConfig';
 import { F, FJ } from '../../constants/fonts';
 
 const PRONOUNS = PRONOUN_ORDERS.standard;
 
+function getFilteredVerbs() {
+  const config = getPracticeConfig();
+  if (config.selectedVerbIds.length === 0) return VERBS;
+  return VERBS.filter((v) => config.selectedVerbIds.includes(v.id));
+}
+
 function pickRandom() {
-  return VERBS[Math.floor(Math.random() * VERBS.length)];
+  const verbs = getFilteredVerbs();
+  return verbs[Math.floor(Math.random() * verbs.length)];
 }
 
 function getVerbTenseKeys(verb) {
-  return Object.keys(verb.tenses).filter((k) => TENSES[k]?.type === 'simple');
+  const config = getPracticeConfig();
+  const simpleKeys = Object.keys(verb.tenses).filter((k) => TENSES[k]?.type === 'simple');
+  if (config.selectedTenseKeys.length === 0) return simpleKeys;
+  return simpleKeys.filter((k) => config.selectedTenseKeys.includes(k));
 }
 
 export default function CrossScreen() {
+  const router = useRouter();
+  const config = getPracticeConfig();
+
   const [currentVerb, setCurrentVerb] = useState(pickRandom);
-  const [selectedPronounIndex, setSelectedPronounIndex] = useState(0);
+  const [selectedPronounIndex, setSelectedPronounIndex] = useState(config.selectedPronounIndex || 0);
   const [accentOptional, setAccentOptional] = useState(false);
 
   const tenseKeys = getVerbTenseKeys(currentVerb);
@@ -247,6 +262,13 @@ export default function CrossScreen() {
             <Text style={styles.secondaryButtonText}>スキップ</Text>
           </TouchableOpacity>
         )}
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.navigate('/')}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.backButtonText}>トップに戻る</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -387,5 +409,14 @@ const styles = StyleSheet.create({
     color: '#4CAF50',
     fontSize: 18,
     fontFamily: FJ.semiBold,
+  },
+  backButton: {
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  backButtonText: {
+    color: '#888888',
+    fontSize: 14,
+    fontFamily: FJ.regular,
   },
 });
