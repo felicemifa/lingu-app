@@ -22,7 +22,7 @@ function pickRandom() {
 }
 
 function getVerbTenseKeys(verb) {
-  return Object.keys(verb.tenses);
+  return Object.keys(verb.tenses).filter((k) => TENSES[k]?.type === 'simple');
 }
 
 export default function CrossScreen() {
@@ -131,6 +131,7 @@ export default function CrossScreen() {
       {/* ヘッダー */}
       <View style={styles.header}>
         <Text style={styles.verbTitle}>{currentVerb.name}</Text>
+        <Text style={styles.verbMeaning}>{currentVerb.meaning}</Text>
         <Text style={currentVerb.irregular ? styles.irregular : styles.regular}>
           {currentVerb.irregular ? '不規則変化' : '規則変化'}
         </Text>
@@ -265,6 +266,12 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontFamily: F.bold,
     color: '#333333',
+  },
+  verbMeaning: {
+    fontSize: 13,
+    fontFamily: FJ.regular,
+    color: '#888888',
+    marginTop: 2,
   },
   irregular: {
     fontSize: 15,
