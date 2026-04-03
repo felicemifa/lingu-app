@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -38,62 +38,65 @@ const IMPLEMENTED_TENSE_KEYS = Object.keys(TENSES).filter(
 const TIMEFRAMES = ['present', 'past', 'future'];
 const MOODS = ['indicative', 'subjunctive', 'conditional', 'imperative'];
 
+/** 法×時制の AND 条件で該当する時制キーを計算 */
+function computeMatchingTenseKeys(moods, timeframes, includeCompound) {
+  return new Set(
+    IMPLEMENTED_TENSE_KEYS.filter((k) => {
+      const t = TENSES[k];
+      if (t.type === 'compound' && !includeCompound) return false;
+      return moods.has(t.mood) && timeframes.has(t.timeframe);
+    }),
+  );
+}
+
 export default function HomeScreen() {
   const router = useRouter();
 
-  // ① 練習パターン
-  const [practiceMode, setPracticeMode] = useState('mood');
-  const [selectedTimeframes, setSelectedTimeframes] = useState(() => new Set(['present']));
+  // ── フィルタ選択 ──
   const [selectedMoods, setSelectedMoods] = useState(() => new Set(['indicative']));
-  const [selectedPronounIndex, setSelectedPronounIndex] = useState(0);
+  const [selectedTimeframes, setSelectedTimeframes] = useState(() => new Set(['present']));
+  const [selectedPronounIndex, setSelectedPronounIndex] = useState(null);
 
-  // ③ 詳細設定
+  // ── 詳細設定 ──
   const [includeCompound, setIncludeCompound] = useState(false);
   const [includeProgressive, setIncludeProgressive] = useState(false);
 
-  // ④ 動詞選択
+  // ── 動詞選択 ──
   const [selectedVerbIds, setSelectedVerbIds] = useState(
     () => new Set(VERBS.map((v) => v.id)),
   );
 
-  // ⑤ 時制選択
-  const [selectedTenseKeys, setSelectedTenseKeys] = useState(
-    () => new Set(IMPLEMENTED_TENSE_KEYS.filter((k) => TENSES[k].type === 'simple')),
+  // ── 折り畳み ──
+  const [verbsExpanded, setVerbsExpanded] = useState(false);
+  const [tensesExpanded, setTensesExpanded] = useState(false);
+
+  // ── 時制選択（法×時制から自動計算） ──
+  const selectedTenseKeys = useMemo(
+    () => computeMatchingTenseKeys(selectedMoods, selectedTimeframes, includeCompound),
+    [selectedMoods, selectedTimeframes, includeCompound],
   );
 
-  // ── timeframe / mood トグル（時制選択を自動連動） ──
-  const toggleTimeframe = (tf) => {
-    setSelectedTimeframes((prev) => {
-      const next = new Set(prev);
-      next.has(tf) ? next.delete(tf) : next.add(tf);
-      // 連動：該当する時制のみ選択
-      const matching = new Set(
-        IMPLEMENTED_TENSE_KEYS.filter((k) => {
-          const t = TENSES[k];
-          if (t.type === 'compound' && !includeCompound) return false;
-          return next.has(t.timeframe);
-        }),
-      );
-      setSelectedTenseKeys(matching);
-      return next;
-    });
-  };
-
+  // ── 法トグル ──
   const toggleMood = (m) => {
     setSelectedMoods((prev) => {
       const next = new Set(prev);
       next.has(m) ? next.delete(m) : next.add(m);
-      // 連動：該当する時制のみ選択
-      const matching = new Set(
-        IMPLEMENTED_TENSE_KEYS.filter((k) => {
-          const t = TENSES[k];
-          if (t.type === 'compound' && !includeCompound) return false;
-          return next.has(t.mood);
-        }),
-      );
-      setSelectedTenseKeys(matching);
       return next;
     });
+  };
+
+  // ── 時制トグル ──
+  const toggleTimeframe = (tf) => {
+    setSelectedTimeframes((prev) => {
+      const next = new Set(prev);
+      next.has(tf) ? next.delete(tf) : next.add(tf);
+      return next;
+    });
+  };
+
+  // ── 人称トグル（再タップで解除） ──
+  const togglePronoun = (i) => {
+    setSelectedPronounIndex((prev) => (prev === i ? null : i));
   };
 
   // ── 動詞トグル ──
@@ -115,49 +118,69 @@ export default function HomeScreen() {
     });
   };
 
-  // ── 時制トグル ──
-  const toggleTense = (key) => {
+  // ── 複合時制トグル ──
+  const handleToggleCompound = (val) => {
+    setIncludeCompound(val);
+  };
+
+  // ── 時制の手動トグル（折り畳みリスト内） ──
+  const [manualTenseOverrides, setManualTenseOverrides] = useState(() => new Set());
+  const toggleTenseManual = (key) => {
     const t = TENSES[key];
     if (t.type === 'compound' && !includeCompound) return;
-    setSelectedTenseKeys((prev) => {
+    setManualTenseOverrides((prev) => {
       const next = new Set(prev);
       next.has(key) ? next.delete(key) : next.add(key);
       return next;
     });
   };
 
-  // ── 複合時制トグル連動 ──
-  const handleToggleCompound = (val) => {
-    setIncludeCompound(val);
-    if (!val) {
-      setSelectedTenseKeys((prev) => {
-        const next = new Set(prev);
-        IMPLEMENTED_TENSE_KEYS.forEach((k) => {
-          if (TENSES[k].type === 'compound') next.delete(k);
-        });
-        return next;
-      });
-    }
+  // ── 最終的な時制選択（自動計算 ± 手動オーバーライド） ──
+  const effectiveTenseKeys = useMemo(() => {
+    // 手動オーバーライドがなければ自動計算をそのまま使う
+    // 手動オーバーライドは XOR 的に適用
+    const result = new Set(selectedTenseKeys);
+    manualTenseOverrides.forEach((k) => {
+      if (result.has(k)) {
+        result.delete(k);
+      } else {
+        const t = TENSES[k];
+        if (t.type === 'compound' && !includeCompound) return;
+        result.add(k);
+      }
+    });
+    return result;
+  }, [selectedTenseKeys, manualTenseOverrides, includeCompound]);
+
+  // 法・時制チップ変更時に手動オーバーライドをリセット
+  const toggleMoodWrapped = (m) => {
+    setManualTenseOverrides(new Set());
+    toggleMood(m);
+  };
+  const toggleTimeframeWrapped = (tf) => {
+    setManualTenseOverrides(new Set());
+    toggleTimeframe(tf);
   };
 
   // ── スタート可否 ──
-  const hasFilter =
-    practiceMode === 'tense'
-      ? selectedTimeframes.size > 0
-      : practiceMode === 'mood'
-        ? selectedMoods.size > 0
-        : true;
-  const canStart = selectedVerbIds.size > 0 && selectedTenseKeys.size > 0 && hasFilter;
+  const canStart =
+    selectedVerbIds.size > 0 &&
+    effectiveTenseKeys.size > 0 &&
+    selectedMoods.size > 0 &&
+    selectedTimeframes.size > 0;
 
   // ── スタート ──
   const handleStart = () => {
     setPracticeConfig({
       selectedVerbIds: [...selectedVerbIds],
-      selectedTenseKeys: [...selectedTenseKeys],
-      selectedPronounIndex,
+      selectedTenseKeys: [...effectiveTenseKeys],
+      selectedPronounIndex: selectedPronounIndex,
     });
-    router.navigate(practiceMode === 'person' ? '/cross' : '/practice');
+    router.navigate(selectedPronounIndex !== null ? '/cross' : '/practice');
   };
+
+  // ── 該当する時制数を表示用に計算 ──
+  const matchCount = effectiveTenseKeys.size;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -170,92 +193,80 @@ export default function HomeScreen() {
           <Text style={styles.headerTitle}>活用練習</Text>
         </View>
 
-        {/* ──── ① 練習パターン ──── */}
+        {/* ──── 法で練習 ──── */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>練習パターン</Text>
-          <View style={styles.radioRow}>
-            {[
-              { key: 'mood', label: '法で練習' },
-              { key: 'tense', label: '時制で練習' },
-              { key: 'person', label: '人称ごとに練習' },
-            ].map(({ key, label }) => (
-              <TouchableOpacity
-                key={key}
-                style={styles.radioItem}
-                onPress={() => setPracticeMode(key)}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.radioOuter, practiceMode === key && styles.radioOuterActive]}>
-                  {practiceMode === key && <View style={styles.radioInner} />}
-                </View>
-                <Text style={[styles.radioLabel, practiceMode === key && styles.radioLabelActive]}>
-                  {label}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          <Text style={styles.sectionTitle}>法で練習</Text>
+          <View style={styles.chipRow}>
+            {MOODS.map((m) => {
+              const active = selectedMoods.has(m);
+              return (
+                <TouchableOpacity
+                  key={m}
+                  style={[styles.filterChip, styles.filterChipFlex, active && styles.filterChipActive]}
+                  onPress={() => toggleMoodWrapped(m)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.filterChipText, active && styles.filterChipTextActive]}>
+                    {MOOD_LABELS[m]}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
 
-        {/* ──── ② フィルタチップ ──── */}
+        {/* ──── 時制で練習 ──── */}
         <View style={styles.section}>
-          {practiceMode === 'tense' ? (
-            <View style={styles.chipRow}>
-              {TIMEFRAMES.map((tf) => {
-                const active = selectedTimeframes.has(tf);
-                return (
-                  <TouchableOpacity
-                    key={tf}
-                    style={[styles.filterChip, styles.filterChipFlex, active && styles.filterChipActive]}
-                    onPress={() => toggleTimeframe(tf)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={[styles.filterChipText, active && styles.filterChipTextActive]}>
-                      {TIMEFRAME_LABELS[tf]}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          ) : practiceMode === 'mood' ? (
-            <View style={styles.chipRow}>
-              {MOODS.map((m) => {
-                const active = selectedMoods.has(m);
-                return (
-                  <TouchableOpacity
-                    key={m}
-                    style={[styles.filterChip, styles.filterChipFlex, active && styles.filterChipActive]}
-                    onPress={() => toggleMood(m)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={[styles.filterChipText, active && styles.filterChipTextActive]}>
-                      {MOOD_LABELS[m]}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          ) : (
-            <View style={styles.chipRow}>
-              {PRONOUNS.map((p, i) => {
-                const active = selectedPronounIndex === i;
-                return (
-                  <TouchableOpacity
-                    key={p}
-                    style={[styles.filterChip, styles.filterChipFlex, active && styles.filterChipActive]}
-                    onPress={() => setSelectedPronounIndex(i)}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={[styles.filterChipText, styles.filterChipTextLatin, active && styles.filterChipTextActive]}>
-                      {p}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          )}
+          <Text style={styles.sectionTitle}>時制で練習</Text>
+          <View style={styles.chipRow}>
+            {TIMEFRAMES.map((tf) => {
+              const active = selectedTimeframes.has(tf);
+              return (
+                <TouchableOpacity
+                  key={tf}
+                  style={[styles.filterChip, styles.filterChipFlex, active && styles.filterChipActive]}
+                  onPress={() => toggleTimeframeWrapped(tf)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.filterChipText, active && styles.filterChipTextActive]}>
+                    {TIMEFRAME_LABELS[tf]}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
 
-        {/* ──── ③ 詳細設定 ──── */}
+        {/* ──── 人称で練習 ──── */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>人称で練習</Text>
+          <View style={styles.chipRow}>
+            {PRONOUNS.map((p, i) => {
+              const active = selectedPronounIndex === i;
+              return (
+                <TouchableOpacity
+                  key={p}
+                  style={[styles.filterChip, styles.filterChipFlex, active && styles.filterChipActive]}
+                  onPress={() => togglePronoun(i)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.filterChipText, styles.filterChipTextLatin, active && styles.filterChipTextActive]}>
+                    {p}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* ──── 該当時制数 ──── */}
+        <View style={styles.matchInfo}>
+          <Text style={styles.matchInfoText}>
+            該当する時制: {matchCount}件
+          </Text>
+        </View>
+
+        {/* ──── 詳細設定 ──── */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>詳細設定</Text>
           <View style={styles.toggleRow}>
@@ -282,130 +293,174 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* ──── ④ 動詞リスト ──── */}
+        {/* ──── 動詞（折り畳み） ──── */}
         <View style={styles.section}>
-          <View style={styles.sectionTitleRow}>
-            <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>動詞</Text>
-            <TouchableOpacity
-              onPress={() => {
-                const allSelected = VERBS.every((v) => selectedVerbIds.has(v.id));
-                setSelectedVerbIds(allSelected ? new Set() : new Set(VERBS.map((v) => v.id)));
-              }}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.globalToggleText}>
-                {VERBS.every((v) => selectedVerbIds.has(v.id)) ? '全て解除' : '全て選択'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          {VERB_GROUPS.map((group) => {
-            const groupVerbs = VERBS.filter(group.filter);
-            if (groupVerbs.length === 0) return null;
-            const allSelected = groupVerbs.every((v) => selectedVerbIds.has(v.id));
-            return (
-              <View key={group.label} style={styles.verbGroup}>
+          <TouchableOpacity
+            style={styles.collapsibleHeader}
+            onPress={() => setVerbsExpanded((v) => !v)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.collapsibleTitleRow}>
+              <Text style={styles.collapsibleArrow}>{verbsExpanded ? '▼' : '▶'}</Text>
+              <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>動詞</Text>
+            </View>
+            <Text style={styles.collapsibleSummary}>
+              {selectedVerbIds.size}/{VERBS.length}選択
+            </Text>
+          </TouchableOpacity>
+          {verbsExpanded && (
+            <View style={styles.collapsibleContent}>
+              <View style={styles.globalToggleRow}>
                 <TouchableOpacity
-                  style={styles.verbGroupHeader}
-                  onPress={() => toggleVerbGroup(group.filter)}
+                  onPress={() => {
+                    const allSelected = VERBS.every((v) => selectedVerbIds.has(v.id));
+                    setSelectedVerbIds(allSelected ? new Set() : new Set(VERBS.map((v) => v.id)));
+                  }}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.verbGroupLabel}>{group.label}</Text>
-                  <Text style={styles.verbGroupAction}>
-                    {allSelected ? '全解除' : '全選択'}
+                  <Text style={styles.globalToggleText}>
+                    {VERBS.every((v) => selectedVerbIds.has(v.id)) ? '全て解除' : '全て選択'}
                   </Text>
                 </TouchableOpacity>
-                {groupVerbs.map((verb) => (
-                  <TouchableOpacity
-                    key={verb.id}
-                    style={styles.verbItem}
-                    onPress={() => toggleVerb(verb.id)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={[styles.checkbox, selectedVerbIds.has(verb.id) && styles.checkboxActive]}>
-                      {selectedVerbIds.has(verb.id) && <Text style={styles.checkmark}>✓</Text>}
-                    </View>
-                    <Text style={styles.verbName}>{verb.name}</Text>
-                    <Text style={styles.verbMeaning}>{verb.meaning}</Text>
-                  </TouchableOpacity>
-                ))}
               </View>
-            );
-          })}
+              {VERB_GROUPS.map((group) => {
+                const groupVerbs = VERBS.filter(group.filter);
+                if (groupVerbs.length === 0) return null;
+                const allSelected = groupVerbs.every((v) => selectedVerbIds.has(v.id));
+                return (
+                  <View key={group.label} style={styles.verbGroup}>
+                    <TouchableOpacity
+                      style={styles.verbGroupHeader}
+                      onPress={() => toggleVerbGroup(group.filter)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.verbGroupLabel}>{group.label}</Text>
+                      <Text style={styles.verbGroupAction}>
+                        {allSelected ? '全解除' : '全選択'}
+                      </Text>
+                    </TouchableOpacity>
+                    {groupVerbs.map((verb) => (
+                      <TouchableOpacity
+                        key={verb.id}
+                        style={styles.verbItem}
+                        onPress={() => toggleVerb(verb.id)}
+                        activeOpacity={0.7}
+                      >
+                        <View style={[styles.checkbox, selectedVerbIds.has(verb.id) && styles.checkboxActive]}>
+                          {selectedVerbIds.has(verb.id) && <Text style={styles.checkmark}>✓</Text>}
+                        </View>
+                        <Text style={styles.verbName}>{verb.name}</Text>
+                        <Text style={styles.verbMeaning}>{verb.meaning}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                );
+              })}
+            </View>
+          )}
         </View>
 
-        {/* ──── ⑤ 時制選択 ──── */}
+        {/* ──── 法・時制（折り畳み） ──── */}
         <View style={styles.section}>
-          <View style={styles.sectionTitleRow}>
-            <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>時制</Text>
-            <TouchableOpacity
-              onPress={() => {
-                const selectableKeys = IMPLEMENTED_TENSE_KEYS.filter((k) =>
-                  includeCompound ? true : TENSES[k].type !== 'compound',
-                );
-                const allSelected = selectableKeys.every((k) => selectedTenseKeys.has(k));
-                setSelectedTenseKeys(allSelected ? new Set() : new Set(selectableKeys));
-              }}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.globalToggleText}>
-                {IMPLEMENTED_TENSE_KEYS.filter((k) =>
-                  includeCompound ? true : TENSES[k].type !== 'compound',
-                ).every((k) => selectedTenseKeys.has(k))
-                  ? '全て解除'
-                  : '全て選択'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          {MOOD_ORDER.map((mood) => {
-            const tenseKeys = IMPLEMENTED_TENSE_KEYS.filter((k) => TENSES[k].mood === mood);
-            if (tenseKeys.length === 0) return null;
-            return (
-              <View key={mood} style={styles.tenseMoodGroup}>
-                <Text style={styles.tenseMoodLabel}>{MOOD_LABELS[mood]}</Text>
-                {tenseKeys.map((key) => {
-                  const t = TENSES[key];
-                  const isCompoundDisabled = t.type === 'compound' && !includeCompound;
-                  const isSelected = selectedTenseKeys.has(key);
-                  return (
-                    <TouchableOpacity
-                      key={key}
-                      style={[styles.tenseItem, isCompoundDisabled && styles.tenseItemDisabled]}
-                      onPress={() => toggleTense(key)}
-                      activeOpacity={isCompoundDisabled ? 1 : 0.7}
-                    >
-                      <View
-                        style={[
-                          styles.checkbox,
-                          isSelected && !isCompoundDisabled && styles.checkboxActive,
-                          isCompoundDisabled && styles.checkboxDisabled,
-                        ]}
-                      >
-                        {isSelected && !isCompoundDisabled && <Text style={styles.checkmark}>✓</Text>}
-                      </View>
-                      <Text
-                        style={[
-                          styles.tenseLabel,
-                          isCompoundDisabled && styles.tenseLabelDisabled,
-                        ]}
-                      >
-                        {t.label}
-                      </Text>
-                      {t.type === 'compound' && (
-                        <Text style={styles.tenseTypeBadge}>複合</Text>
-                      )}
-                    </TouchableOpacity>
-                  );
-                })}
+          <TouchableOpacity
+            style={styles.collapsibleHeader}
+            onPress={() => setTensesExpanded((v) => !v)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.collapsibleTitleRow}>
+              <Text style={styles.collapsibleArrow}>{tensesExpanded ? '▼' : '▶'}</Text>
+              <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>法・時制</Text>
+            </View>
+            <Text style={styles.collapsibleSummary}>
+              {effectiveTenseKeys.size}件選択
+            </Text>
+          </TouchableOpacity>
+          {tensesExpanded && (
+            <View style={styles.collapsibleContent}>
+              <View style={styles.globalToggleRow}>
+                <TouchableOpacity
+                  onPress={() => {
+                    const selectableKeys = IMPLEMENTED_TENSE_KEYS.filter((k) =>
+                      includeCompound ? true : TENSES[k].type !== 'compound',
+                    );
+                    const allSelected = selectableKeys.every((k) => effectiveTenseKeys.has(k));
+                    if (allSelected) {
+                      // すべて解除 → 手動オーバーライドで自動計算分を全部消す
+                      const overrides = new Set();
+                      selectedTenseKeys.forEach((k) => overrides.add(k));
+                      setManualTenseOverrides(overrides);
+                    } else {
+                      // 全選択 → 自動計算にない分を手動で追加
+                      const overrides = new Set();
+                      selectableKeys.forEach((k) => {
+                        if (!selectedTenseKeys.has(k)) overrides.add(k);
+                      });
+                      setManualTenseOverrides(overrides);
+                    }
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.globalToggleText}>
+                    {IMPLEMENTED_TENSE_KEYS.filter((k) =>
+                      includeCompound ? true : TENSES[k].type !== 'compound',
+                    ).every((k) => effectiveTenseKeys.has(k))
+                      ? '全て解除'
+                      : '全て選択'}
+                  </Text>
+                </TouchableOpacity>
               </View>
-            );
-          })}
+              {MOOD_ORDER.map((mood) => {
+                const tenseKeys = IMPLEMENTED_TENSE_KEYS.filter((k) => TENSES[k].mood === mood);
+                if (tenseKeys.length === 0) return null;
+                return (
+                  <View key={mood} style={styles.tenseMoodGroup}>
+                    <Text style={styles.tenseMoodLabel}>{MOOD_LABELS[mood]}</Text>
+                    {tenseKeys.map((key) => {
+                      const t = TENSES[key];
+                      const isCompoundDisabled = t.type === 'compound' && !includeCompound;
+                      const isSelected = effectiveTenseKeys.has(key);
+                      return (
+                        <TouchableOpacity
+                          key={key}
+                          style={[styles.tenseItem, isCompoundDisabled && styles.tenseItemDisabled]}
+                          onPress={() => toggleTenseManual(key)}
+                          activeOpacity={isCompoundDisabled ? 1 : 0.7}
+                        >
+                          <View
+                            style={[
+                              styles.checkbox,
+                              isSelected && !isCompoundDisabled && styles.checkboxActive,
+                              isCompoundDisabled && styles.checkboxDisabled,
+                            ]}
+                          >
+                            {isSelected && !isCompoundDisabled && <Text style={styles.checkmark}>✓</Text>}
+                          </View>
+                          <Text
+                            style={[
+                              styles.tenseLabel,
+                              isCompoundDisabled && styles.tenseLabelDisabled,
+                            ]}
+                          >
+                            {t.label}
+                          </Text>
+                          {t.type === 'compound' && (
+                            <Text style={styles.tenseTypeBadge}>複合</Text>
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                );
+              })}
+            </View>
+          )}
         </View>
 
         {/* 下部余白 */}
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* ──── ⑥ スタートボタン ──── */}
+      {/* ──── スタートボタン ──── */}
       <View style={styles.buttonArea}>
         <TouchableOpacity
           style={[styles.startButton, !canStart && styles.startButtonDisabled]}
@@ -414,7 +469,7 @@ export default function HomeScreen() {
           disabled={!canStart}
         >
           <Text style={[styles.startButtonText, !canStart && styles.startButtonTextDisabled]}>
-            練習スタート
+            {selectedPronounIndex !== null ? '人称練習スタート' : '練習スタート'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -455,57 +510,6 @@ const styles = StyleSheet.create({
     color: '#333333',
     marginBottom: 12,
   },
-  sectionTitleRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  globalToggleText: {
-    fontSize: 13,
-    fontFamily: FJ.regular,
-    color: '#4CAF50',
-  },
-
-  // ── Radio ──
-  radioRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 16,
-    rowGap: 12,
-  },
-  radioItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  radioOuter: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 2,
-    borderColor: '#CCCCCC',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioOuterActive: {
-    borderColor: '#4CAF50',
-  },
-  radioInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#4CAF50',
-  },
-  radioLabel: {
-    fontSize: 15,
-    fontFamily: FJ.regular,
-    color: '#666666',
-  },
-  radioLabelActive: {
-    color: '#333333',
-    fontFamily: FJ.semiBold,
-  },
 
   // ── Filter chips ──
   chipRow: {
@@ -539,6 +543,17 @@ const styles = StyleSheet.create({
     fontFamily: FJ.semiBold,
   },
 
+  // ── Match info ──
+  matchInfo: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+  },
+  matchInfoText: {
+    fontSize: 13,
+    fontFamily: FJ.regular,
+    color: '#4CAF50',
+  },
+
   // ── Toggle ──
   toggleRow: {
     flexDirection: 'row',
@@ -556,6 +571,40 @@ const styles = StyleSheet.create({
   },
   toggleLabelDisabled: {
     color: '#AAAAAA',
+  },
+
+  // ── Collapsible ──
+  collapsibleHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  collapsibleTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  collapsibleArrow: {
+    fontSize: 12,
+    color: '#999999',
+  },
+  collapsibleSummary: {
+    fontSize: 13,
+    fontFamily: FJ.regular,
+    color: '#888888',
+  },
+  collapsibleContent: {
+    marginTop: 8,
+  },
+  globalToggleRow: {
+    alignItems: 'flex-end',
+    marginBottom: 4,
+  },
+  globalToggleText: {
+    fontSize: 13,
+    fontFamily: FJ.regular,
+    color: '#4CAF50',
   },
 
   // ── Verb list ──
