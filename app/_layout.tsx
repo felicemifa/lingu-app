@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Platform } from 'react-native';
 import { FONT_ASSETS } from '../constants/fonts';
 
 export default function RootLayout() {
@@ -16,16 +16,26 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <View style={styles.container}>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
       </Stack>
       <StatusBar style="dark" />
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    ...(Platform.OS === 'web'
+      ? {
+          maxWidth: 430,
+          width: '100%',
+          alignSelf: 'center',
+        }
+      : {}),
+  },
   loading: {
     flex: 1,
     justifyContent: 'center',
