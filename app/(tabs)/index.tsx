@@ -250,20 +250,13 @@ export default function HomeScreen() {
                   onPress={() => togglePronoun(i)}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.filterChipText, styles.filterChipTextLatin, active && styles.filterChipTextActive]}>
+                  <Text style={[styles.filterChipText, styles.filterChipTextLatin, active && styles.filterChipTextActiveLatin]}>
                     {p}
                   </Text>
                 </TouchableOpacity>
               );
             })}
           </View>
-        </View>
-
-        {/* ──── 該当時制数 ──── */}
-        <View style={styles.matchInfo}>
-          <Text style={styles.matchInfoText}>
-            該当する時制: {matchCount}件
-          </Text>
         </View>
 
         {/* ──── 詳細設定 ──── */}
@@ -462,6 +455,9 @@ export default function HomeScreen() {
 
       {/* ──── スタートボタン ──── */}
       <View style={styles.buttonArea}>
+        <Text style={styles.matchInfoText}>
+          該当する時制: {matchCount}件
+        </Text>
         <TouchableOpacity
           style={[styles.startButton, !canStart && styles.startButtonDisabled]}
           onPress={handleStart}
@@ -542,16 +538,18 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontFamily: FJ.semiBold,
   },
+  filterChipTextActiveLatin: {
+    color: '#FFFFFF',
+    fontFamily: F.semiBold,
+  },
 
   // ── Match info ──
-  matchInfo: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-  },
   matchInfoText: {
     fontSize: 13,
     fontFamily: FJ.regular,
     color: '#4CAF50',
+    textAlign: 'center',
+    marginBottom: 8,
   },
 
   // ── Toggle ──
