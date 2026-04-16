@@ -179,6 +179,16 @@ export default function HomeScreen() {
     router.navigate(selectedPronounIndex !== null ? '/cross' : '/practice');
   };
 
+  // ── 確認スタート ──
+  const handleReview = () => {
+    setPracticeConfig({
+      selectedVerbIds: [...selectedVerbIds],
+      selectedTenseKeys: [...effectiveTenseKeys],
+      selectedPronounIndex: selectedPronounIndex,
+    });
+    router.navigate('/review');
+  };
+
   // ── 該当する時制数を表示用に計算 ──
   const matchCount = effectiveTenseKeys.size;
 
@@ -468,6 +478,16 @@ export default function HomeScreen() {
             {selectedPronounIndex !== null ? '人称練習スタート' : '練習スタート'}
           </Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.reviewButton, !canStart && styles.reviewButtonDisabled]}
+          onPress={handleReview}
+          activeOpacity={canStart ? 0.85 : 1}
+          disabled={!canStart}
+        >
+          <Text style={[styles.reviewButtonText, !canStart && styles.reviewButtonTextDisabled]}>
+            確認スタート
+          </Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -741,6 +761,27 @@ const styles = StyleSheet.create({
     fontFamily: FJ.semiBold,
   },
   startButtonTextDisabled: {
+    color: '#AAAAAA',
+  },
+  reviewButton: {
+    height: 54,
+    borderRadius: 30,
+    borderWidth: 1.5,
+    borderColor: '#4CAF50',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+  },
+  reviewButtonDisabled: {
+    borderColor: '#E0E0E0',
+  },
+  reviewButtonText: {
+    color: '#4CAF50',
+    fontSize: 18,
+    fontFamily: FJ.semiBold,
+  },
+  reviewButtonTextDisabled: {
     color: '#AAAAAA',
   },
 });
