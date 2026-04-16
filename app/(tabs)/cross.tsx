@@ -7,12 +7,14 @@ import {
   StyleSheet,
   ScrollView,
   SafeAreaView,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { VERBS } from '../../data/verbs';
 import { TENSES } from '../../constants/tenses';
 import { PRONOUN_ORDERS } from '../../constants/pronouns';
 import { checkAnswer, formatAnswer } from '../../utils/checkAnswer';
+import { getStem } from '../../utils/getStem';
 import { loadStats, recordResult } from '../../data/stats';
 import { getPracticeConfig } from '../../data/practiceConfig';
 import { F, FJ } from '../../constants/fonts';
@@ -56,6 +58,8 @@ export default function CrossScreen() {
     });
   }, []);
 
+  const stem = getStem(currentVerb);
+
   const getCorrectAnswer = (tenseIndex) => {
     const tenseKey = tenseKeys[tenseIndex];
     return currentVerb.tenses[tenseKey].forms[selectedPronounIndex];
@@ -69,7 +73,7 @@ export default function CrossScreen() {
     setInputs(next);
   };
 
-  const handleSubmitEditing = (index) => {
+  const handleMoveNext = (index) => {
     for (let i = index + 1; i < tenseKeys.length; i++) {
       if (!isNullForm(i)) {
         inputRefs.current[i]?.current?.focus();
@@ -79,12 +83,37 @@ export default function CrossScreen() {
     inputRefs.current[index]?.current?.blur();
   };
 
+  const handleMovePrev = (index) => {
+    for (let i = index - 1; i >= 0; i--) {
+      if (!isNullForm(i)) {
+        inputRefs.current[i]?.current?.focus();
+        return;
+      }
+    }
+  };
+
+  const handleSubmitEditing = (index) => {
+    handleMoveNext(index);
+  };
+
+  const handleKeyPress = (e, index) => {
+    if (Platform.OS !== 'web') return;
+    const key = e.nativeEvent?.key;
+    if (key === 'ArrowDown' || key === 'Enter') {
+      e.preventDefault?.();
+      handleMoveNext(index);
+    } else if (key === 'ArrowUp') {
+      e.preventDefault?.();
+      handleMovePrev(index);
+    }
+  };
+
   const handleShowAnswers = useCallback(() => {
     setShowAnswers(true);
     tenseKeys.forEach((tenseKey, i) => {
       const correct = getCorrectAnswer(i);
       if (correct === null) return;
-      const isRight = checkAnswer(inputs[i], correct, accentOptional) ? 1 : 0;
+      const isRight = checkAnswer(stem + inputs[i], correct, accentOptional) ? 1 : 0;
       recordResult({
         language: currentVerb.language,
         verbId: currentVerb.id,
@@ -93,7 +122,7 @@ export default function CrossScreen() {
         total: 1,
       });
     });
-  }, [inputs, accentOptional, currentVerb, selectedPronounIndex, tenseKeys]);
+  }, [inputs, accentOptional, currentVerb, selectedPronounIndex, tenseKeys, stem]);
 
   const handleRestart = useCallback(() => {
     const newVerb = pickRandom();
@@ -128,7 +157,7 @@ export default function CrossScreen() {
 
   const isCorrect = (tenseIndex) => {
     const correct = getCorrectAnswer(tenseIndex);
-    return correct !== null && checkAnswer(inputs[tenseIndex], correct, accentOptional);
+    return correct !== null && checkAnswer(stem + inputs[tenseIndex], correct, accentOptional);
   };
 
   const getInputColor = (index) => {
@@ -197,17 +226,23 @@ export default function CrossScreen() {
                   </>
                 ) : (
                   <>
-                    <TextInput
-                      ref={inputRefs.current[index]}
-                      value={inputs[index]}
-                      onChangeText={(text) => handleChangeText(text, index)}
-                      onSubmitEditing={() => handleSubmitEditing(index)}
-                      returnKeyType="next"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      editable={!showAnswers}
-                      style={[styles.textInput, { color: getInputColor(index) }]}
-                    />
+                    <View style={styles.inputRow}>
+                      {stem !== '' && (
+                        <Text style={styles.stemText}>{stem}</Text>
+                      )}
+                      <TextInput
+                        ref={inputRefs.current[index]}
+                        value={inputs[index]}
+                        onChangeText={(text) => handleChangeText(text, index)}
+                        onSubmitEditing={() => handleSubmitEditing(index)}
+                        onKeyPress={(e) => handleKeyPress(e, index)}
+                        returnKeyType="next"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        editable={!showAnswers}
+                        style={[styles.textInput, { color: getInputColor(index) }]}
+                      />
+                    </View>
                     <View
                       style={[
                         styles.underline,
@@ -355,7 +390,18 @@ const styles = StyleSheet.create({
   inputWrapper: {
     position: 'relative',
   },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  stemText: {
+    fontSize: 16,
+    fontFamily: F.regular,
+    color: '#BBBBBB',
+    paddingBottom: 6,
+  },
   textInput: {
+    flex: 1,
     fontSize: 16,
     fontFamily: F.regular,
     paddingBottom: 6,
