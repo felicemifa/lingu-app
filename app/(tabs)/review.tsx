@@ -23,7 +23,7 @@ function getFilteredVerbs() {
   return VERBS.filter((v) => config.selectedVerbIds.includes(v.id));
 }
 
-function getFilteredTenseKeys(verb) {
+function getFilteredTenseKeysForVerb(verb) {
   const config = getPracticeConfig();
   const verbTenseKeys = Object.keys(verb.tenses);
   if (!config.selectedTenseKeys || config.selectedTenseKeys.length === 0) {
@@ -32,49 +32,119 @@ function getFilteredTenseKeys(verb) {
   return verbTenseKeys.filter((k) => config.selectedTenseKeys.includes(k));
 }
 
-function buildPairs() {
+/** practice-style: pick random (verb, tense) pair */
+function pickRandomPair() {
   const verbs = getFilteredVerbs();
   const pairs = [];
   for (const verb of verbs) {
-    const tenseKeys = getFilteredTenseKeys(verb);
+    const tenseKeys = getFilteredTenseKeysForVerb(verb);
     for (const tenseKey of tenseKeys) {
       pairs.push({ verb, tenseKey });
     }
   }
-  return pairs;
-}
-
-function pickRandomPair() {
-  const pairs = buildPairs();
   if (pairs.length === 0) return null;
   return pairs[Math.floor(Math.random() * pairs.length)];
 }
 
+/** cross-style: pick random verb */
+function pickRandomVerb() {
+  const verbs = getFilteredVerbs();
+  if (verbs.length === 0) return null;
+  return verbs[Math.floor(Math.random() * verbs.length)];
+}
+
+/**
+ * Render one form as inline Text pieces matching practice.tsx/cross.tsx's inputRow structure.
+ * Returns elements to place inside a flex-row View.
+ */
+function FormInline({ form, stem, canSplit }) {
+  if (canSplit && typeof form === 'string' && form.toLowerCase().startsWith(stem)) {
+    const rest = form.slice(stem.length);
+    return (
+      <>
+        {stem !== '' && <Text style={styles.stemText}>{stem}</Text>}
+        <Text style={styles.textInput}>{rest}</Text>
+      </>
+    );
+  }
+  return <Text style={styles.textInput}>{form}</Text>;
+}
+
+/** Render a single form (string) or an array (gender variants) */
+function FormDisplay({ form, stem, canSplit }) {
+  if (Array.isArray(form)) {
+    return (
+      <View style={styles.inputRow}>
+        {form.map((f, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && <Text style={styles.separator}> / </Text>}
+            <FormInline form={f} stem={stem} canSplit={canSplit} />
+          </React.Fragment>
+        ))}
+      </View>
+    );
+  }
+  return (
+    <View style={styles.inputRow}>
+      <FormInline form={form} stem={stem} canSplit={canSplit} />
+    </View>
+  );
+}
+
 export default function ReviewScreen() {
   const router = useRouter();
+  const config = getPracticeConfig();
+  const hasPronoun =
+    config.selectedPronounIndex !== null && config.selectedPronounIndex !== undefined;
 
-  const [current, setCurrent] = useState(() => pickRandomPair());
+  // ── cross-style state ──
+  const [crossVerb, setCrossVerb] = useState(() => (hasPronoun ? pickRandomVerb() : null));
+  const [crossPronounIndex, setCrossPronounIndex] = useState(
+    hasPronoun ? config.selectedPronounIndex : 0,
+  );
 
-  const handleNext = useCallback(() => {
-    const next = pickRandomPair();
-    if (next) setCurrent(next);
-  }, []);
-
-  const handlePractice = useCallback(() => {
-    if (!current) return;
-    setPracticeConfig({
-      selectedVerbIds: [current.verb.id],
-      selectedTenseKeys: [current.tenseKey],
-      selectedPronounIndex: null,
-    });
-    router.navigate('/practice');
-  }, [current, router]);
+  // ── practice-style state ──
+  const [pair, setPair] = useState(() => (hasPronoun ? null : pickRandomPair()));
 
   const handleGoHome = useCallback(() => {
     router.navigate('/');
   }, [router]);
 
-  if (!current) {
+  const handleNextCross = useCallback(() => {
+    const v = pickRandomVerb();
+    if (v) setCrossVerb(v);
+  }, []);
+
+  const handleNextPractice = useCallback(() => {
+    const p = pickRandomPair();
+    if (p) setPair(p);
+  }, []);
+
+  const handlePracticeCross = useCallback(() => {
+    if (!crossVerb) return;
+    const tenseKeys = getFilteredTenseKeysForVerb(crossVerb).filter(
+      (k) => TENSES[k]?.type === 'simple',
+    );
+    setPracticeConfig({
+      selectedVerbIds: [crossVerb.id],
+      selectedTenseKeys: tenseKeys,
+      selectedPronounIndex: crossPronounIndex,
+    });
+    router.navigate('/cross');
+  }, [crossVerb, crossPronounIndex, router]);
+
+  const handlePracticePractice = useCallback(() => {
+    if (!pair) return;
+    setPracticeConfig({
+      selectedVerbIds: [pair.verb.id],
+      selectedTenseKeys: [pair.tenseKey],
+      selectedPronounIndex: null,
+    });
+    router.navigate('/practice');
+  }, [pair, router]);
+
+  // ── Empty state ──
+  if ((hasPronoun && !crossVerb) || (!hasPronoun && !pair)) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.emptyContainer}>
@@ -91,57 +161,138 @@ export default function ReviewScreen() {
     );
   }
 
-  const { verb, tenseKey } = current;
-  const tenseData = verb.tenses[tenseKey];
-  const forms = tenseData?.forms || [null, null, null, null, null, null];
-  const tenseInfo = TENSES[tenseKey];
-  const isCompound = tenseInfo?.type === 'compound';
-  const stem = getStem(verb);
-  const canSplitStem = !isCompound && !verb.irregular && stem !== '';
-
-  /** Render a single form (string). If stem-splittable, color stem gray + ending black. */
-  const renderForm = (form, keyPrefix) => {
-    if (canSplitStem && typeof form === 'string' && form.toLowerCase().startsWith(stem)) {
-      const rest = form.slice(stem.length);
-      return (
-        <Text key={keyPrefix} style={styles.formText}>
-          <Text style={styles.stemText}>{stem}</Text>
-          <Text style={styles.endingText}>{rest}</Text>
-        </Text>
-      );
-    }
-    return (
-      <Text key={keyPrefix} style={[styles.formText, styles.endingText]}>
-        {form}
-      </Text>
+  // ─────────────────────────────────────
+  // CROSS-STYLE LAYOUT (pronoun selected)
+  // ─────────────────────────────────────
+  if (hasPronoun) {
+    const verb = crossVerb;
+    const tenseKeys = getFilteredTenseKeysForVerb(verb).filter(
+      (k) => TENSES[k]?.type === 'simple',
     );
-  };
+    const stem = getStem(verb);
+    const canSplit = !verb.irregular && stem !== '';
 
-  /** Render a form cell (handles null and array). */
-  const renderFormCell = (form, index) => {
-    if (form === null) {
-      return <Text style={styles.nullPlaceholder}>—</Text>;
-    }
-    if (Array.isArray(form)) {
-      return (
-        <View style={styles.arrayRow}>
-          {form.map((f, i) => (
-            <React.Fragment key={`${index}-${i}`}>
-              {i > 0 && <Text style={styles.separator}> / </Text>}
-              {renderForm(f, `${index}-${i}`)}
-            </React.Fragment>
+    const getForm = (tenseKey) => verb.tenses[tenseKey].forms[crossPronounIndex];
+
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        {/* ヘッダー */}
+        <View style={styles.header}>
+          <Text style={styles.verbTitle}>{verb.name}</Text>
+          <Text style={styles.verbMeaning}>{verb.meaning}</Text>
+          <Text style={verb.irregular ? styles.irregular : styles.regular}>
+            {verb.irregular ? '不規則変化' : '規則変化'}
+          </Text>
+        </View>
+
+        {/* 人称選択チップ */}
+        <View style={styles.chipRow}>
+          {PRONOUNS.map((p, i) => (
+            <TouchableOpacity
+              key={p}
+              style={[styles.chip, i === crossPronounIndex && styles.chipActive]}
+              onPress={() => setCrossPronounIndex(i)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.chipText,
+                  i === crossPronounIndex && styles.chipTextActive,
+                ]}
+              >
+                {p}
+              </Text>
+            </TouchableOpacity>
           ))}
         </View>
-      );
-    }
-    return renderForm(form, String(index));
-  };
+
+        {/* 時制ごとの表示 */}
+        <ScrollView
+          style={styles.formScrollCross}
+          contentContainerStyle={styles.formContentCross}
+        >
+          {tenseKeys.map((tenseKey) => {
+            const form = getForm(tenseKey);
+            const isNull = form === null;
+            const isCompound = TENSES[tenseKey]?.type === 'compound';
+            const rowCanSplit = canSplit && !isCompound;
+            return (
+              <View key={tenseKey} style={styles.rowCross}>
+                <Text
+                  style={[
+                    styles.tenseLabel,
+                    isNull && styles.tenseLabelDisabled,
+                  ]}
+                >
+                  {TENSES[tenseKey].label}
+                </Text>
+                <View style={styles.inputWrapperCross}>
+                  {isNull ? (
+                    <>
+                      <Text style={styles.nullPlaceholder}>—</Text>
+                      <View
+                        style={[styles.underline, { backgroundColor: '#EEEEEE' }]}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <FormDisplay form={form} stem={stem} canSplit={rowCanSplit} />
+                      <View
+                        style={[styles.underline, { backgroundColor: '#CCCCCC' }]}
+                      />
+                    </>
+                  )}
+                </View>
+              </View>
+            );
+          })}
+        </ScrollView>
+
+        {/* ボタン */}
+        <View style={styles.buttonArea}>
+          <TouchableOpacity
+            style={styles.primaryButton}
+            onPress={handleNextCross}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.primaryButtonText}>次の動詞</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.secondaryButton}
+            onPress={handlePracticeCross}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.secondaryButtonText}>練習する</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={handleGoHome}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.backButtonText}>トップに戻る</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ─────────────────────────────────────
+  // PRACTICE-STYLE LAYOUT (no pronoun)
+  // ─────────────────────────────────────
+  const { verb, tenseKey } = pair;
+  const tenseData = verb.tenses[tenseKey];
+  const forms = tenseData?.forms || [null, null, null, null, null, null];
+  const isCompound = TENSES[tenseKey]?.type === 'compound';
+  const stem = getStem(verb);
+  const canSplit = !verb.irregular && !isCompound && stem !== '';
 
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* ヘッダー */}
       <View style={styles.header}>
-        <Text style={styles.verbTitle}>{verb.name}</Text>
+        <View style={styles.headerTitleRow}>
+          <Text style={styles.verbTitle}>{verb.name}</Text>
+        </View>
         <Text style={styles.verbMeaning}>{verb.meaning}</Text>
         <View style={styles.headerSubRow}>
           <Text style={verb.irregular ? styles.irregular : styles.regular}>
@@ -149,18 +300,19 @@ export default function ReviewScreen() {
           </Text>
           <Text style={styles.tenseText}>
             {' / '}
-            {tenseInfo?.label || tenseKey}
+            {TENSES[tenseKey]?.label || tenseKey}
           </Text>
         </View>
       </View>
 
-      {/* 活用一覧 */}
+      {/* 人称ごとの表示 */}
       <ScrollView
         style={styles.formScroll}
         contentContainerStyle={styles.formContent}
       >
         {PRONOUNS.map((pronoun, index) => {
-          const isNull = forms[index] === null;
+          const form = forms[index];
+          const isNull = form === null;
           return (
             <View key={pronoun} style={styles.row}>
               <Text
@@ -171,14 +323,22 @@ export default function ReviewScreen() {
               >
                 {pronoun}
               </Text>
-              <View style={styles.formCell}>
-                {renderFormCell(forms[index], index)}
-                <View
-                  style={[
-                    styles.underline,
-                    { backgroundColor: isNull ? '#EEEEEE' : '#CCCCCC' },
-                  ]}
-                />
+              <View style={styles.inputWrapper}>
+                {isNull ? (
+                  <>
+                    <Text style={styles.nullPlaceholder}>—</Text>
+                    <View
+                      style={[styles.underline, { backgroundColor: '#EEEEEE' }]}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <FormDisplay form={form} stem={stem} canSplit={canSplit} />
+                    <View
+                      style={[styles.underline, { backgroundColor: '#CCCCCC' }]}
+                    />
+                  </>
+                )}
               </View>
             </View>
           );
@@ -189,14 +349,14 @@ export default function ReviewScreen() {
       <View style={styles.buttonArea}>
         <TouchableOpacity
           style={styles.primaryButton}
-          onPress={handleNext}
+          onPress={handleNextPractice}
           activeOpacity={0.85}
         >
           <Text style={styles.primaryButtonText}>次の動詞</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.secondaryButton}
-          onPress={handlePractice}
+          onPress={handlePracticePractice}
           activeOpacity={0.85}
         >
           <Text style={styles.secondaryButtonText}>練習する</Text>
@@ -218,10 +378,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
+
+  // ── Header ──
   header: {
     backgroundColor: '#F4FAE8',
     paddingVertical: 24,
     alignItems: 'center',
+  },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   verbTitle: {
     fontSize: 28,
@@ -243,17 +410,48 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#E57373',
     fontFamily: FJ.regular,
+    marginTop: 4,
   },
   regular: {
     fontSize: 15,
     color: '#81C784',
     fontFamily: FJ.regular,
+    marginTop: 4,
   },
   tenseText: {
     fontSize: 15,
     color: '#666666',
     fontFamily: F.regular,
   },
+
+  // ── Chip row (cross-style) ──
+  chipRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F0F0F0',
+  },
+  chipActive: {
+    backgroundColor: '#4CAF50',
+  },
+  chipText: {
+    fontSize: 15,
+    color: '#666666',
+    fontFamily: F.regular,
+  },
+  chipTextActive: {
+    color: '#FFFFFF',
+    fontFamily: F.semiBold,
+  },
+
+  // ── Form list (practice-style) ──
   formScroll: {
     flex: 1,
   },
@@ -277,30 +475,52 @@ const styles = StyleSheet.create({
   pronounDisabled: {
     color: '#CCCCCC',
   },
-  formCell: {
+  inputWrapper: {
+    flex: 1,
+    position: 'relative',
+  },
+
+  // ── Form list (cross-style) ──
+  formScrollCross: {
     flex: 1,
   },
-  formText: {
-    fontSize: 16,
+  formContentCross: {
+    paddingHorizontal: 32,
+    paddingVertical: 8,
+    gap: 12,
+  },
+  rowCross: {
+    marginBottom: 12,
+  },
+  tenseLabel: {
+    fontSize: 13,
+    color: '#888888',
+    marginBottom: 4,
     fontFamily: F.regular,
-    paddingBottom: 6,
+  },
+  tenseLabelDisabled: {
+    color: '#CCCCCC',
+  },
+  inputWrapperCross: {
+    position: 'relative',
+  },
+
+  // ── Form text (shared) ──
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
   },
   stemText: {
-    color: '#BBBBBB',
-  },
-  endingText: {
-    color: '#333333',
-  },
-  nullPlaceholder: {
     fontSize: 16,
     fontFamily: F.regular,
-    color: '#CCCCCC',
+    color: '#BBBBBB',
     paddingBottom: 6,
   },
-  arrayRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'flex-end',
+  textInput: {
+    fontSize: 16,
+    fontFamily: F.regular,
+    paddingBottom: 6,
+    color: '#333333',
   },
   separator: {
     fontSize: 16,
@@ -308,10 +528,18 @@ const styles = StyleSheet.create({
     color: '#888888',
     paddingBottom: 6,
   },
+  nullPlaceholder: {
+    fontSize: 16,
+    fontFamily: F.regular,
+    color: '#CCCCCC',
+    paddingBottom: 6,
+  },
   underline: {
     height: 1,
     backgroundColor: '#CCCCCC',
   },
+
+  // ── Buttons ──
   buttonArea: {
     paddingHorizontal: 32,
     paddingBottom: 32,
@@ -352,6 +580,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: FJ.regular,
   },
+
+  // ── Empty state ──
   emptyContainer: {
     flex: 1,
     paddingHorizontal: 32,
