@@ -101,6 +101,9 @@ export default function PracticeScreen() {
       }
     }
     inputRefs.current[index]?.current?.blur();
+    if (!showAnswers) {
+      handleShowAnswers();
+    }
   };
 
   const handleMovePrev = (index) => {

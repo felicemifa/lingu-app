@@ -7,6 +7,7 @@ import {
   ScrollView,
   SafeAreaView,
   Switch,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { VERBS } from '../../data/verbs';
@@ -195,7 +196,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
-        style={styles.scroll}
+        style={[styles.scroll, Platform.OS === 'web' && { overflowY: 'auto' }]}
         contentContainerStyle={styles.scrollContent}
       >
         {/* ──── ヘッダー ──── */}
@@ -502,6 +503,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
+    flexGrow: 1,
     paddingBottom: 16,
   },
   header: {
