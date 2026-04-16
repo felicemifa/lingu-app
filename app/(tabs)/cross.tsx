@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
   stemText: {
     fontSize: 16,
     fontFamily: F.regular,
-    color: '#BBBBBB',
+    color: '#4CAF50',
     paddingBottom: 6,
   },
   textInput: {
