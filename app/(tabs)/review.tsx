@@ -12,6 +12,7 @@ import { VERBS } from '../../data/verbs';
 import { TENSES } from '../../constants/tenses';
 import { PRONOUN_ORDERS } from '../../constants/pronouns';
 import { getStem } from '../../utils/getStem';
+import { parseAccentForm } from '../../utils/parseAccent';
 import { getPracticeConfig, setPracticeConfig } from '../../data/practiceConfig';
 import { F, FJ } from '../../constants/fonts';
 
@@ -54,39 +55,57 @@ function pickRandomVerb() {
 }
 
 /**
- * Render one form as inline Text pieces matching practice.tsx/cross.tsx's inputRow structure.
- * Returns elements to place inside a flex-row View.
+ * Render one form char-by-char with stem/ending colour and accent underline.
+ * Stem chars → green (#4CAF50), ending chars → black (#333333).
+ * Chars in accentedIndices get textDecorationLine: 'underline'.
  */
-function FormInline({ form, stem, canSplit }) {
-  if (canSplit && typeof form === 'string' && form.toLowerCase().startsWith(stem)) {
-    const rest = form.slice(stem.length);
-    return (
-      <>
-        {stem !== '' && <Text style={styles.stemText}>{stem}</Text>}
-        <Text style={styles.textInput}>{rest}</Text>
-      </>
-    );
-  }
-  return <Text style={styles.textInput}>{form}</Text>;
+function FormInline({ form, stem, canSplit, accentForm }) {
+  const source = accentForm != null ? accentForm : (typeof form === 'string' ? form : '');
+  const { clean, accentedIndices } = parseAccentForm(source);
+  const stemLen =
+    canSplit && stem && clean.toLowerCase().startsWith(stem) ? stem.length : 0;
+
+  return (
+    <Text style={styles.charContainer}>
+      {[...clean].map((ch, idx) => {
+        const isAccented = accentedIndices.has(idx);
+        const isStem = stemLen > 0 && idx < stemLen;
+        return (
+          <Text
+            key={idx}
+            style={[
+              { color: isStem ? '#4CAF50' : '#333333' },
+              isAccented ? { textDecorationLine: 'underline' } : null,
+            ]}
+          >
+            {ch}
+          </Text>
+        );
+      })}
+    </Text>
+  );
 }
 
-/** Render a single form (string) or an array (gender variants) */
-function FormDisplay({ form, stem, canSplit }) {
+/** Render a single form (string) or an array (gender variants), with accent data */
+function FormDisplay({ form, accentForm, stem, canSplit }) {
   if (Array.isArray(form)) {
     return (
       <View style={styles.inputRow}>
-        {form.map((f, i) => (
-          <React.Fragment key={i}>
-            {i > 0 && <Text style={styles.separator}> / </Text>}
-            <FormInline form={f} stem={stem} canSplit={canSplit} />
-          </React.Fragment>
-        ))}
+        {form.map((f, i) => {
+          const af = Array.isArray(accentForm) ? accentForm[i] : accentForm;
+          return (
+            <React.Fragment key={i}>
+              {i > 0 && <Text style={styles.separator}> / </Text>}
+              <FormInline form={f} stem={stem} canSplit={canSplit} accentForm={af} />
+            </React.Fragment>
+          );
+        })}
       </View>
     );
   }
   return (
     <View style={styles.inputRow}>
-      <FormInline form={form} stem={stem} canSplit={canSplit} />
+      <FormInline form={form} stem={stem} canSplit={canSplit} accentForm={accentForm} />
     </View>
   );
 }
@@ -173,6 +192,8 @@ export default function ReviewScreen() {
     const canSplit = !verb.irregular && stem !== '';
 
     const getForm = (tenseKey) => verb.tenses[tenseKey].forms[crossPronounIndex];
+    const getAccentForm = (tenseKey) =>
+      verb.tenses[tenseKey].accentForms?.[crossPronounIndex];
 
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -213,6 +234,7 @@ export default function ReviewScreen() {
         >
           {tenseKeys.map((tenseKey) => {
             const form = getForm(tenseKey);
+            const accentForm = getAccentForm(tenseKey);
             const isNull = form === null;
             const isCompound = TENSES[tenseKey]?.type === 'compound';
             const rowCanSplit = canSplit && !isCompound;
@@ -236,7 +258,12 @@ export default function ReviewScreen() {
                     </>
                   ) : (
                     <>
-                      <FormDisplay form={form} stem={stem} canSplit={rowCanSplit} />
+                      <FormDisplay
+                        form={form}
+                        accentForm={accentForm}
+                        stem={stem}
+                        canSplit={rowCanSplit}
+                      />
                       <View
                         style={[styles.underline, { backgroundColor: '#CCCCCC' }]}
                       />
@@ -282,6 +309,7 @@ export default function ReviewScreen() {
   const { verb, tenseKey } = pair;
   const tenseData = verb.tenses[tenseKey];
   const forms = tenseData?.forms || [null, null, null, null, null, null];
+  const accentForms = tenseData?.accentForms || [];
   const isCompound = TENSES[tenseKey]?.type === 'compound';
   const stem = getStem(verb);
   const canSplit = !verb.irregular && !isCompound && stem !== '';
@@ -312,6 +340,7 @@ export default function ReviewScreen() {
       >
         {PRONOUNS.map((pronoun, index) => {
           const form = forms[index];
+          const accentForm = accentForms[index];
           const isNull = form === null;
           return (
             <View key={pronoun} style={styles.row}>
@@ -333,7 +362,12 @@ export default function ReviewScreen() {
                   </>
                 ) : (
                   <>
-                    <FormDisplay form={form} stem={stem} canSplit={canSplit} />
+                    <FormDisplay
+                      form={form}
+                      accentForm={accentForm}
+                      stem={stem}
+                      canSplit={canSplit}
+                    />
                     <View
                       style={[styles.underline, { backgroundColor: '#CCCCCC' }]}
                     />
@@ -510,13 +544,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
   },
-  stemText: {
-    fontSize: 16,
-    fontFamily: F.regular,
-    color: '#4CAF50',
-    paddingBottom: 6,
-  },
-  textInput: {
+  charContainer: {
     fontSize: 16,
     fontFamily: F.regular,
     paddingBottom: 6,

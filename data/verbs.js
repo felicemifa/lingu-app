@@ -30,6 +30,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['ho', 'hai', 'ha', 'abbiamo', 'avete', 'hanno'],
+        accentForms: ['h[o]', 'h[a]i', 'h[a]', 'abb[i]amo', 'av[e]te', 'h[a]nno'],
       },
       passatoProssimo: {
         type: 'compound',
@@ -40,6 +41,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['ho avuto', 'hai avuto', 'ha avuto', 'abbiamo avuto', 'avete avuto', 'hanno avuto'],
+        accentForms: ['h[o] av[u]to', 'h[a]i av[u]to', 'h[a] av[u]to', 'abb[i]amo av[u]to', 'av[e]te av[u]to', 'h[a]nno av[u]to'],
       },
       imperfetto: {
         type: 'simple',
@@ -50,6 +52,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['avevo', 'avevi', 'aveva', 'avevamo', 'avevate', 'avevano'],
+        accentForms: ['av[e]vo', 'av[e]vi', 'av[e]va', 'avev[a]mo', 'avev[a]te', 'av[e]vano'],
       },
       passatoRemoto: {
         type: 'simple',
@@ -60,6 +63,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['ebbi', 'avesti', 'ebbe', 'avemmo', 'aveste', 'ebbero'],
+        accentForms: ['[e]bbi', 'av[e]sti', '[e]bbe', 'av[e]mmo', 'av[e]ste', '[e]bbero'],
       },
       trapassatoProssimo: {
         type: 'compound',
@@ -70,6 +74,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['avevo avuto', 'avevi avuto', 'aveva avuto', 'avevamo avuto', 'avevate avuto', 'avevano avuto'],
+        accentForms: ['av[e]vo av[u]to', 'av[e]vi av[u]to', 'av[e]va av[u]to', 'avev[a]mo av[u]to', 'avev[a]te av[u]to', 'av[e]vano av[u]to'],
       },
       trapassatoRemoto: {
         type: 'compound',
@@ -80,6 +85,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['ebbi avuto', 'avesti avuto', 'ebbe avuto', 'avemmo avuto', 'aveste avuto', 'ebbero avuto'],
+        accentForms: ['[e]bbi av[u]to', 'av[e]sti av[u]to', '[e]bbe av[u]to', 'av[e]mmo av[u]to', 'av[e]ste av[u]to', '[e]bbero av[u]to'],
       },
       futuroSemplice: {
         type: 'simple',
@@ -90,6 +96,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['avrò', 'avrai', 'avrà', 'avremo', 'avrete', 'avranno'],
+        accentForms: ['avr[ò]', 'avr[a]i', 'avr[à]', 'avr[e]mo', 'avr[e]te', 'avr[a]nno'],
       },
       futuroAnteriore: {
         type: 'compound',
@@ -100,6 +107,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['avrò avuto', 'avrai avuto', 'avrà avuto', 'avremo avuto', 'avrete avuto', 'avranno avuto'],
+        accentForms: ['avr[ò] av[u]to', 'avr[a]i av[u]to', 'avr[à] av[u]to', 'avr[e]mo av[u]to', 'avr[e]te av[u]to', 'avr[a]nno av[u]to'],
       },
       congiuntivoPresente: {
         type: 'simple',
@@ -110,6 +118,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['abbia', 'abbia', 'abbia', 'abbiamo', 'abbiate', 'abbiano'],
+        accentForms: ['[a]bbia', '[a]bbia', '[a]bbia', 'abb[i]amo', 'abb[i]ate', '[a]bbiano'],
       },
       congiuntivoPassato: {
         type: 'compound',
@@ -120,6 +129,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['abbia avuto', 'abbia avuto', 'abbia avuto', 'abbiamo avuto', 'abbiate avuto', 'abbiano avuto'],
+        accentForms: ['[a]bbia av[u]to', '[a]bbia av[u]to', '[a]bbia av[u]to', 'abb[i]amo av[u]to', 'abb[i]ate av[u]to', '[a]bbiano av[u]to'],
       },
       congiuntivoImperfetto: {
         type: 'simple',
@@ -130,6 +140,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['avessi', 'avessi', 'avesse', 'avessimo', 'aveste', 'avessero'],
+        accentForms: ['av[e]ssi', 'av[e]ssi', 'av[e]sse', 'av[e]ssimo', 'av[e]ste', 'av[e]ssero'],
       },
       congiuntivoTrapassato: {
         type: 'compound',
@@ -140,6 +151,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['avessi avuto', 'avessi avuto', 'avesse avuto', 'avessimo avuto', 'aveste avuto', 'avessero avuto'],
+        accentForms: ['av[e]ssi av[u]to', 'av[e]ssi av[u]to', 'av[e]sse av[u]to', 'av[e]ssimo av[u]to', 'av[e]ste av[u]to', 'av[e]ssero av[u]to'],
       },
       condizionalePresente: {
         type: 'simple',
@@ -150,6 +162,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['avrei', 'avresti', 'avrebbe', 'avremmo', 'avreste', 'avrebbero'],
+        accentForms: ['avr[e]i', 'avr[e]sti', 'avr[e]bbe', 'avr[e]mmo', 'avr[e]ste', 'avr[e]bbero'],
       },
       condizionalePassato: {
         type: 'compound',
@@ -160,6 +173,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['avrei avuto', 'avresti avuto', 'avrebbe avuto', 'avremmo avuto', 'avreste avuto', 'avrebbero avuto'],
+        accentForms: ['avr[e]i av[u]to', 'avr[e]sti av[u]to', 'avr[e]bbe av[u]to', 'avr[e]mmo av[u]to', 'avr[e]ste av[u]to', 'avr[e]bbero av[u]to'],
       },
       imperativo: {
         type: 'simple',
@@ -170,6 +184,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: [null, 'abbi', 'abbia', 'abbiamo', 'abbiate', 'abbiano'],
+        accentForms: [null, '[a]bbi', '[a]bbia', 'abb[i]amo', 'abb[i]ate', '[a]bbiano'],
       },
     },
   },
@@ -205,6 +220,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['sono', 'sei', 'è', 'siamo', 'siete', 'sono'],
+        accentForms: ['s[o]no', 's[e]i', '[è]', 's[i]amo', 'si[e]te', 's[o]no'],
       },
       passatoProssimo: {
         type: 'compound',
@@ -222,6 +238,14 @@ export const VERBS = [
           ['siete stati', 'siete state'],
           ['sono stati', 'sono state'],
         ],
+        accentForms: [
+          ['s[o]no st[a]to', 's[o]no st[a]ta'],
+          ['s[e]i st[a]to', 's[e]i st[a]ta'],
+          ['[è] st[a]to', '[è] st[a]ta'],
+          ['s[i]amo st[a]ti', 's[i]amo st[a]te'],
+          ['si[e]te st[a]ti', 'si[e]te st[a]te'],
+          ['s[o]no st[a]ti', 's[o]no st[a]te'],
+        ],
       },
       imperfetto: {
         type: 'simple',
@@ -232,6 +256,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['ero', 'eri', 'era', 'eravamo', 'eravate', 'erano'],
+        accentForms: ['[e]ro', '[e]ri', '[e]ra', 'erav[a]mo', 'erav[a]te', '[e]rano'],
       },
       passatoRemoto: {
         type: 'simple',
@@ -242,6 +267,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['fui', 'fosti', 'fu', 'fummo', 'foste', 'furono'],
+        accentForms: ['f[u]i', 'f[o]sti', 'f[u]', 'f[u]mmo', 'f[o]ste', 'f[u]rono'],
       },
       trapassatoProssimo: {
         type: 'compound',
@@ -258,6 +284,14 @@ export const VERBS = [
           ['eravamo stati', 'eravamo state'],
           ['eravate stati', 'eravate state'],
           ['erano stati', 'erano state'],
+        ],
+        accentForms: [
+          ['[e]ro st[a]to', '[e]ro st[a]ta'],
+          ['[e]ri st[a]to', '[e]ri st[a]ta'],
+          ['[e]ra st[a]to', '[e]ra st[a]ta'],
+          ['erav[a]mo st[a]ti', 'erav[a]mo st[a]te'],
+          ['erav[a]te st[a]ti', 'erav[a]te st[a]te'],
+          ['[e]rano st[a]ti', '[e]rano st[a]te'],
         ],
       },
       trapassatoRemoto: {
@@ -276,6 +310,14 @@ export const VERBS = [
           ['foste stati', 'foste state'],
           ['furono stati', 'furono state'],
         ],
+        accentForms: [
+          ['f[u]i st[a]to', 'f[u]i st[a]ta'],
+          ['f[o]sti st[a]to', 'f[o]sti st[a]ta'],
+          ['f[u] st[a]to', 'f[u] st[a]ta'],
+          ['f[u]mmo st[a]ti', 'f[u]mmo st[a]te'],
+          ['f[o]ste st[a]ti', 'f[o]ste st[a]te'],
+          ['f[u]rono st[a]ti', 'f[u]rono st[a]te'],
+        ],
       },
       futuroSemplice: {
         type: 'simple',
@@ -286,6 +328,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['sarò', 'sarai', 'sarà', 'saremo', 'sarete', 'saranno'],
+        accentForms: ['sar[ò]', 'sar[a]i', 'sar[à]', 'sar[e]mo', 'sar[e]te', 'sar[a]nno'],
       },
       futuroAnteriore: {
         type: 'compound',
@@ -303,6 +346,14 @@ export const VERBS = [
           ['sarete stati', 'sarete state'],
           ['saranno stati', 'saranno state'],
         ],
+        accentForms: [
+          ['sar[ò] st[a]to', 'sar[ò] st[a]ta'],
+          ['sar[a]i st[a]to', 'sar[a]i st[a]ta'],
+          ['sar[à] st[a]to', 'sar[à] st[a]ta'],
+          ['sar[e]mo st[a]ti', 'sar[e]mo st[a]te'],
+          ['sar[e]te st[a]ti', 'sar[e]te st[a]te'],
+          ['sar[a]nno st[a]ti', 'sar[a]nno st[a]te'],
+        ],
       },
       congiuntivoPresente: {
         type: 'simple',
@@ -313,6 +364,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['sia', 'sia', 'sia', 'siamo', 'siate', 'siano'],
+        accentForms: ['s[i]a', 's[i]a', 's[i]a', 's[i]amo', 's[i]ate', 's[i]ano'],
       },
       congiuntivoPassato: {
         type: 'compound',
@@ -330,6 +382,14 @@ export const VERBS = [
           ['siate stati', 'siate state'],
           ['siano stati', 'siano state'],
         ],
+        accentForms: [
+          ['s[i]a st[a]to', 's[i]a st[a]ta'],
+          ['s[i]a st[a]to', 's[i]a st[a]ta'],
+          ['s[i]a st[a]to', 's[i]a st[a]ta'],
+          ['s[i]amo st[a]ti', 's[i]amo st[a]te'],
+          ['s[i]ate st[a]ti', 's[i]ate st[a]te'],
+          ['s[i]ano st[a]ti', 's[i]ano st[a]te'],
+        ],
       },
       congiuntivoImperfetto: {
         type: 'simple',
@@ -340,6 +400,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['fossi', 'fossi', 'fosse', 'fossimo', 'foste', 'fossero'],
+        accentForms: ['f[o]ssi', 'f[o]ssi', 'f[o]sse', 'f[o]ssimo', 'f[o]ste', 'f[o]ssero'],
       },
       congiuntivoTrapassato: {
         type: 'compound',
@@ -357,6 +418,14 @@ export const VERBS = [
           ['foste stati', 'foste state'],
           ['fossero stati', 'fossero state'],
         ],
+        accentForms: [
+          ['f[o]ssi st[a]to', 'f[o]ssi st[a]ta'],
+          ['f[o]ssi st[a]to', 'f[o]ssi st[a]ta'],
+          ['f[o]sse st[a]to', 'f[o]sse st[a]ta'],
+          ['f[o]ssimo st[a]ti', 'f[o]ssimo st[a]te'],
+          ['f[o]ste st[a]ti', 'f[o]ste st[a]te'],
+          ['f[o]ssero st[a]ti', 'f[o]ssero st[a]te'],
+        ],
       },
       condizionalePresente: {
         type: 'simple',
@@ -367,6 +436,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['sarei', 'saresti', 'sarebbe', 'saremmo', 'sareste', 'sarebbero'],
+        accentForms: ['sar[e]i', 'sar[e]sti', 'sar[e]bbe', 'sar[e]mmo', 'sar[e]ste', 'sar[e]bbero'],
       },
       condizionalePassato: {
         type: 'compound',
@@ -384,6 +454,14 @@ export const VERBS = [
           ['sareste stati', 'sareste state'],
           ['sarebbero stati', 'sarebbero state'],
         ],
+        accentForms: [
+          ['sar[e]i st[a]to', 'sar[e]i st[a]ta'],
+          ['sar[e]sti st[a]to', 'sar[e]sti st[a]ta'],
+          ['sar[e]bbe st[a]to', 'sar[e]bbe st[a]ta'],
+          ['sar[e]mmo st[a]ti', 'sar[e]mmo st[a]te'],
+          ['sar[e]ste st[a]ti', 'sar[e]ste st[a]te'],
+          ['sar[e]bbero st[a]ti', 'sar[e]bbero st[a]te'],
+        ],
       },
       imperativo: {
         type: 'simple',
@@ -394,6 +472,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: [null, 'sii', 'sia', 'siamo', 'siate', 'siano'],
+        accentForms: [null, 's[i]i', 's[i]a', 's[i]amo', 's[i]ate', 's[i]ano'],
       },
     },
   },
@@ -429,6 +508,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['amo', 'ami', 'ama', 'amiamo', 'amate', 'amano'],
+        accentForms: ['[a]mo', '[a]mi', '[a]ma', 'am[i]amo', 'am[a]te', '[a]mano'],
         progressiveForms: ['sto amando', 'stai amando', 'sta amando', 'stiamo amando', 'state amando', 'stanno amando'],
       },
       passatoProssimo: {
@@ -440,6 +520,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['ho amato', 'hai amato', 'ha amato', 'abbiamo amato', 'avete amato', 'hanno amato'],
+        accentForms: ['h[o] am[a]to', 'h[a]i am[a]to', 'h[a] am[a]to', 'abb[i]amo am[a]to', 'av[e]te am[a]to', 'h[a]nno am[a]to'],
       },
       imperfetto: {
         type: 'simple',
@@ -450,6 +531,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['amavo', 'amavi', 'amava', 'amavamo', 'amavate', 'amavano'],
+        accentForms: ['am[a]vo', 'am[a]vi', 'am[a]va', 'amav[a]mo', 'amav[a]te', 'am[a]vano'],
         progressiveForms: ['stavo amando', 'stavi amando', 'stava amando', 'stavamo amando', 'stavate amando', 'stavano amando'],
       },
       passatoRemoto: {
@@ -461,6 +543,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['amai', 'amasti', 'amò', 'amammo', 'amaste', 'amarono'],
+        accentForms: ['am[a]i', 'am[a]sti', 'am[ò]', 'am[a]mmo', 'am[a]ste', 'am[a]rono'],
         progressiveForms: ['stetti amando', 'stesti amando', 'stette amando', 'stemmo amando', 'steste amando', 'stettero amando'],
       },
       trapassatoProssimo: {
@@ -472,6 +555,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['avevo amato', 'avevi amato', 'aveva amato', 'avevamo amato', 'avevate amato', 'avevano amato'],
+        accentForms: ['av[e]vo am[a]to', 'av[e]vi am[a]to', 'av[e]va am[a]to', 'avev[a]mo am[a]to', 'avev[a]te am[a]to', 'av[e]vano am[a]to'],
       },
       trapassatoRemoto: {
         type: 'compound',
@@ -482,6 +566,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['ebbi amato', 'avesti amato', 'ebbe amato', 'avemmo amato', 'aveste amato', 'ebbero amato'],
+        accentForms: ['[e]bbi am[a]to', 'av[e]sti am[a]to', '[e]bbe am[a]to', 'av[e]mmo am[a]to', 'av[e]ste am[a]to', '[e]bbero am[a]to'],
       },
       futuroSemplice: {
         type: 'simple',
@@ -492,6 +577,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['amerò', 'amerai', 'amerà', 'ameremo', 'amerete', 'ameranno'],
+        accentForms: ['amer[ò]', 'amer[a]i', 'amer[à]', 'amer[e]mo', 'amer[e]te', 'amer[a]nno'],
         progressiveForms: ['starò amando', 'starai amando', 'starà amando', 'staremo amando', 'starete amando', 'staranno amando'],
       },
       futuroAnteriore: {
@@ -503,6 +589,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['avrò amato', 'avrai amato', 'avrà amato', 'avremo amato', 'avrete amato', 'avranno amato'],
+        accentForms: ['avr[ò] am[a]to', 'avr[a]i am[a]to', 'avr[à] am[a]to', 'avr[e]mo am[a]to', 'avr[e]te am[a]to', 'avr[a]nno am[a]to'],
       },
       congiuntivoPresente: {
         type: 'simple',
@@ -513,6 +600,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['ami', 'ami', 'ami', 'amiamo', 'amiate', 'amino'],
+        accentForms: ['[a]mi', '[a]mi', '[a]mi', 'am[i]amo', 'am[i]ate', '[a]mino'],
         progressiveForms: ['stia amando', 'stia amando', 'stia amando', 'stiamo amando', 'stiate amando', 'stiano amando'],
       },
       congiuntivoPassato: {
@@ -524,6 +612,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['abbia amato', 'abbia amato', 'abbia amato', 'abbiamo amato', 'abbiate amato', 'abbiano amato'],
+        accentForms: ['[a]bbia am[a]to', '[a]bbia am[a]to', '[a]bbia am[a]to', 'abb[i]amo am[a]to', 'abb[i]ate am[a]to', '[a]bbiano am[a]to'],
       },
       congiuntivoImperfetto: {
         type: 'simple',
@@ -534,6 +623,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['amassi', 'amassi', 'amasse', 'amassimo', 'amaste', 'amassero'],
+        accentForms: ['am[a]ssi', 'am[a]ssi', 'am[a]sse', 'am[a]ssimo', 'am[a]ste', 'am[a]ssero'],
         progressiveForms: ['stessi amando', 'stessi amando', 'stesse amando', 'stessimo amando', 'steste amando', 'stessero amando'],
       },
       congiuntivoTrapassato: {
@@ -545,6 +635,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['avessi amato', 'avessi amato', 'avesse amato', 'avessimo amato', 'aveste amato', 'avessero amato'],
+        accentForms: ['av[e]ssi am[a]to', 'av[e]ssi am[a]to', 'av[e]sse am[a]to', 'av[e]ssimo am[a]to', 'av[e]ste am[a]to', 'av[e]ssero am[a]to'],
       },
       condizionalePresente: {
         type: 'simple',
@@ -555,6 +646,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['amerei', 'ameresti', 'amerebbe', 'ameremmo', 'amereste', 'amerebbero'],
+        accentForms: ['amer[e]i', 'amer[e]sti', 'amer[e]bbe', 'amer[e]mmo', 'amer[e]ste', 'amer[e]bbero'],
         progressiveForms: ['starei amando', 'staresti amando', 'starebbe amando', 'staremmo amando', 'stareste amando', 'starebbero amando'],
       },
       condizionalePassato: {
@@ -566,6 +658,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['avrei amato', 'avresti amato', 'avrebbe amato', 'avremmo amato', 'avreste amato', 'avrebbero amato'],
+        accentForms: ['avr[e]i am[a]to', 'avr[e]sti am[a]to', 'avr[e]bbe am[a]to', 'avr[e]mmo am[a]to', 'avr[e]ste am[a]to', 'avr[e]bbero am[a]to'],
       },
       imperativo: {
         type: 'simple',
@@ -576,6 +669,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: [null, 'ama', 'ami', 'amiamo', 'amate', 'amino'],
+        accentForms: [null, '[a]ma', '[a]mi', 'am[i]amo', 'am[a]te', '[a]mino'],
       },
     },
   },
@@ -611,6 +705,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['credo', 'credi', 'crede', 'crediamo', 'credete', 'credono'],
+        accentForms: ['cr[e]do', 'cr[e]di', 'cr[e]de', 'cred[i]amo', 'cred[e]te', 'cr[e]dono'],
         progressiveForms: ['sto credendo', 'stai credendo', 'sta credendo', 'stiamo credendo', 'state credendo', 'stanno credendo'],
       },
       passatoProssimo: {
@@ -622,6 +717,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['ho creduto', 'hai creduto', 'ha creduto', 'abbiamo creduto', 'avete creduto', 'hanno creduto'],
+        accentForms: ['h[o] cred[u]to', 'h[a]i cred[u]to', 'h[a] cred[u]to', 'abb[i]amo cred[u]to', 'av[e]te cred[u]to', 'h[a]nno cred[u]to'],
       },
       imperfetto: {
         type: 'simple',
@@ -632,6 +728,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['credevo', 'credevi', 'credeva', 'credevamo', 'credevate', 'credevano'],
+        accentForms: ['cred[e]vo', 'cred[e]vi', 'cred[e]va', 'credev[a]mo', 'credev[a]te', 'cred[e]vano'],
         progressiveForms: ['stavo credendo', 'stavi credendo', 'stava credendo', 'stavamo credendo', 'stavate credendo', 'stavano credendo'],
       },
       passatoRemoto: {
@@ -643,6 +740,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['credetti', 'credesti', 'credette', 'credemmo', 'credeste', 'credettero'],
+        accentForms: ['cred[e]tti', 'cred[e]sti', 'cred[e]tte', 'cred[e]mmo', 'cred[e]ste', 'cred[e]ttero'],
         progressiveForms: ['stetti credendo', 'stesti credendo', 'stette credendo', 'stemmo credendo', 'steste credendo', 'stettero credendo'],
       },
       trapassatoProssimo: {
@@ -654,6 +752,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['avevo creduto', 'avevi creduto', 'aveva creduto', 'avevamo creduto', 'avevate creduto', 'avevano creduto'],
+        accentForms: ['av[e]vo cred[u]to', 'av[e]vi cred[u]to', 'av[e]va cred[u]to', 'avev[a]mo cred[u]to', 'avev[a]te cred[u]to', 'av[e]vano cred[u]to'],
       },
       trapassatoRemoto: {
         type: 'compound',
@@ -664,6 +763,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['ebbi creduto', 'avesti creduto', 'ebbe creduto', 'avemmo creduto', 'aveste creduto', 'ebbero creduto'],
+        accentForms: ['[e]bbi cred[u]to', 'av[e]sti cred[u]to', '[e]bbe cred[u]to', 'av[e]mmo cred[u]to', 'av[e]ste cred[u]to', '[e]bbero cred[u]to'],
       },
       futuroSemplice: {
         type: 'simple',
@@ -674,6 +774,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['crederò', 'crederai', 'crederà', 'crederemo', 'crederete', 'crederanno'],
+        accentForms: ['creder[ò]', 'creder[a]i', 'creder[à]', 'creder[e]mo', 'creder[e]te', 'creder[a]nno'],
         progressiveForms: ['starò credendo', 'starai credendo', 'starà credendo', 'staremo credendo', 'starete credendo', 'staranno credendo'],
       },
       futuroAnteriore: {
@@ -685,6 +786,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['avrò creduto', 'avrai creduto', 'avrà creduto', 'avremo creduto', 'avrete creduto', 'avranno creduto'],
+        accentForms: ['avr[ò] cred[u]to', 'avr[a]i cred[u]to', 'avr[à] cred[u]to', 'avr[e]mo cred[u]to', 'avr[e]te cred[u]to', 'avr[a]nno cred[u]to'],
       },
       congiuntivoPresente: {
         type: 'simple',
@@ -695,6 +797,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['creda', 'creda', 'creda', 'crediamo', 'crediate', 'credano'],
+        accentForms: ['cr[e]da', 'cr[e]da', 'cr[e]da', 'cred[i]amo', 'cred[i]ate', 'cr[e]dano'],
         progressiveForms: ['stia credendo', 'stia credendo', 'stia credendo', 'stiamo credendo', 'stiate credendo', 'stiano credendo'],
       },
       congiuntivoPassato: {
@@ -706,6 +809,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['abbia creduto', 'abbia creduto', 'abbia creduto', 'abbiamo creduto', 'abbiate creduto', 'abbiano creduto'],
+        accentForms: ['[a]bbia cred[u]to', '[a]bbia cred[u]to', '[a]bbia cred[u]to', 'abb[i]amo cred[u]to', 'abb[i]ate cred[u]to', '[a]bbiano cred[u]to'],
       },
       congiuntivoImperfetto: {
         type: 'simple',
@@ -716,6 +820,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['credessi', 'credessi', 'credesse', 'credessimo', 'credeste', 'credessero'],
+        accentForms: ['cred[e]ssi', 'cred[e]ssi', 'cred[e]sse', 'cred[e]ssimo', 'cred[e]ste', 'cred[e]ssero'],
         progressiveForms: ['stessi credendo', 'stessi credendo', 'stesse credendo', 'stessimo credendo', 'steste credendo', 'stessero credendo'],
       },
       congiuntivoTrapassato: {
@@ -727,6 +832,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['avessi creduto', 'avessi creduto', 'avesse creduto', 'avessimo creduto', 'aveste creduto', 'avessero creduto'],
+        accentForms: ['av[e]ssi cred[u]to', 'av[e]ssi cred[u]to', 'av[e]sse cred[u]to', 'av[e]ssimo cred[u]to', 'av[e]ste cred[u]to', 'av[e]ssero cred[u]to'],
       },
       condizionalePresente: {
         type: 'simple',
@@ -737,6 +843,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['crederei', 'crederesti', 'crederebbe', 'crederemmo', 'credereste', 'crederebbero'],
+        accentForms: ['creder[e]i', 'creder[e]sti', 'creder[e]bbe', 'creder[e]mmo', 'creder[e]ste', 'creder[e]bbero'],
         progressiveForms: ['starei credendo', 'staresti credendo', 'starebbe credendo', 'staremmo credendo', 'stareste credendo', 'starebbero credendo'],
       },
       condizionalePassato: {
@@ -748,6 +855,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['avrei creduto', 'avresti creduto', 'avrebbe creduto', 'avremmo creduto', 'avreste creduto', 'avrebbero creduto'],
+        accentForms: ['avr[e]i cred[u]to', 'avr[e]sti cred[u]to', 'avr[e]bbe cred[u]to', 'avr[e]mmo cred[u]to', 'avr[e]ste cred[u]to', 'avr[e]bbero cred[u]to'],
       },
       imperativo: {
         type: 'simple',
@@ -758,6 +866,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: [null, 'credi', 'creda', 'crediamo', 'credete', 'credano'],
+        accentForms: [null, 'cr[e]di', 'cr[e]da', 'cred[i]amo', 'cred[e]te', 'cr[e]dano'],
       },
     },
   },
@@ -793,6 +902,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['sento', 'senti', 'sente', 'sentiamo', 'sentite', 'sentono'],
+        accentForms: ['s[e]nto', 's[e]nti', 's[e]nte', 'sent[i]amo', 'sent[i]te', 's[e]ntono'],
         progressiveForms: ['sto sentendo', 'stai sentendo', 'sta sentendo', 'stiamo sentendo', 'state sentendo', 'stanno sentendo'],
       },
       passatoProssimo: {
@@ -804,6 +914,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['ho sentito', 'hai sentito', 'ha sentito', 'abbiamo sentito', 'avete sentito', 'hanno sentito'],
+        accentForms: ['h[o] sent[i]to', 'h[a]i sent[i]to', 'h[a] sent[i]to', 'abb[i]amo sent[i]to', 'av[e]te sent[i]to', 'h[a]nno sent[i]to'],
       },
       imperfetto: {
         type: 'simple',
@@ -814,6 +925,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['sentivo', 'sentivi', 'sentiva', 'sentivamo', 'sentivate', 'sentivano'],
+        accentForms: ['sent[i]vo', 'sent[i]vi', 'sent[i]va', 'sentiv[a]mo', 'sentiv[a]te', 'sent[i]vano'],
         progressiveForms: ['stavo sentendo', 'stavi sentendo', 'stava sentendo', 'stavamo sentendo', 'stavate sentendo', 'stavano sentendo'],
       },
       passatoRemoto: {
@@ -825,6 +937,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['sentii', 'sentisti', 'sentì', 'sentimmo', 'sentiste', 'sentirono'],
+        accentForms: ['sent[i]i', 'sent[i]sti', 'sent[ì]', 'sent[i]mmo', 'sent[i]ste', 'sent[i]rono'],
         progressiveForms: ['stetti sentendo', 'stesti sentendo', 'stette sentendo', 'stemmo sentendo', 'steste sentendo', 'stettero sentendo'],
       },
       trapassatoProssimo: {
@@ -836,6 +949,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['avevo sentito', 'avevi sentito', 'aveva sentito', 'avevamo sentito', 'avevate sentito', 'avevano sentito'],
+        accentForms: ['av[e]vo sent[i]to', 'av[e]vi sent[i]to', 'av[e]va sent[i]to', 'avev[a]mo sent[i]to', 'avev[a]te sent[i]to', 'av[e]vano sent[i]to'],
       },
       trapassatoRemoto: {
         type: 'compound',
@@ -846,6 +960,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['ebbi sentito', 'avesti sentito', 'ebbe sentito', 'avemmo sentito', 'aveste sentito', 'ebbero sentito'],
+        accentForms: ['[e]bbi sent[i]to', 'av[e]sti sent[i]to', '[e]bbe sent[i]to', 'av[e]mmo sent[i]to', 'av[e]ste sent[i]to', '[e]bbero sent[i]to'],
       },
       futuroSemplice: {
         type: 'simple',
@@ -856,6 +971,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['sentirò', 'sentirai', 'sentirà', 'sentiremo', 'sentirete', 'sentiranno'],
+        accentForms: ['sentir[ò]', 'sentir[a]i', 'sentir[à]', 'sentir[e]mo', 'sentir[e]te', 'sentir[a]nno'],
         progressiveForms: ['starò sentendo', 'starai sentendo', 'starà sentendo', 'staremo sentendo', 'starete sentendo', 'staranno sentendo'],
       },
       futuroAnteriore: {
@@ -867,6 +983,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['avrò sentito', 'avrai sentito', 'avrà sentito', 'avremo sentito', 'avrete sentito', 'avranno sentito'],
+        accentForms: ['avr[ò] sent[i]to', 'avr[a]i sent[i]to', 'avr[à] sent[i]to', 'avr[e]mo sent[i]to', 'avr[e]te sent[i]to', 'avr[a]nno sent[i]to'],
       },
       congiuntivoPresente: {
         type: 'simple',
@@ -877,6 +994,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['senta', 'senta', 'senta', 'sentiamo', 'sentiate', 'sentano'],
+        accentForms: ['s[e]nta', 's[e]nta', 's[e]nta', 'sent[i]amo', 'sent[i]ate', 's[e]ntano'],
         progressiveForms: ['stia sentendo', 'stia sentendo', 'stia sentendo', 'stiamo sentendo', 'stiate sentendo', 'stiano sentendo'],
       },
       congiuntivoPassato: {
@@ -888,6 +1006,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['abbia sentito', 'abbia sentito', 'abbia sentito', 'abbiamo sentito', 'abbiate sentito', 'abbiano sentito'],
+        accentForms: ['[a]bbia sent[i]to', '[a]bbia sent[i]to', '[a]bbia sent[i]to', 'abb[i]amo sent[i]to', 'abb[i]ate sent[i]to', '[a]bbiano sent[i]to'],
       },
       congiuntivoImperfetto: {
         type: 'simple',
@@ -898,6 +1017,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['sentissi', 'sentissi', 'sentisse', 'sentissimo', 'sentiste', 'sentissero'],
+        accentForms: ['sent[i]ssi', 'sent[i]ssi', 'sent[i]sse', 'sent[i]ssimo', 'sent[i]ste', 'sent[i]ssero'],
         progressiveForms: ['stessi sentendo', 'stessi sentendo', 'stesse sentendo', 'stessimo sentendo', 'steste sentendo', 'stessero sentendo'],
       },
       congiuntivoTrapassato: {
@@ -909,6 +1029,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['avessi sentito', 'avessi sentito', 'avesse sentito', 'avessimo sentito', 'aveste sentito', 'avessero sentito'],
+        accentForms: ['av[e]ssi sent[i]to', 'av[e]ssi sent[i]to', 'av[e]sse sent[i]to', 'av[e]ssimo sent[i]to', 'av[e]ste sent[i]to', 'av[e]ssero sent[i]to'],
       },
       condizionalePresente: {
         type: 'simple',
@@ -919,6 +1040,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['sentirei', 'sentiresti', 'sentirebbe', 'sentiremmo', 'sentireste', 'sentirebbero'],
+        accentForms: ['sentir[e]i', 'sentir[e]sti', 'sentir[e]bbe', 'sentir[e]mmo', 'sentir[e]ste', 'sentir[e]bbero'],
         progressiveForms: ['starei sentendo', 'staresti sentendo', 'starebbe sentendo', 'staremmo sentendo', 'stareste sentendo', 'starebbero sentendo'],
       },
       condizionalePassato: {
@@ -930,6 +1052,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['avrei sentito', 'avresti sentito', 'avrebbe sentito', 'avremmo sentito', 'avreste sentito', 'avrebbero sentito'],
+        accentForms: ['avr[e]i sent[i]to', 'avr[e]sti sent[i]to', 'avr[e]bbe sent[i]to', 'avr[e]mmo sent[i]to', 'avr[e]ste sent[i]to', 'avr[e]bbero sent[i]to'],
       },
       imperativo: {
         type: 'simple',
@@ -940,6 +1063,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: [null, 'senti', 'senta', 'sentiamo', 'sentite', 'sentano'],
+        accentForms: [null, 's[e]nti', 's[e]nta', 'sent[i]amo', 'sent[i]te', 's[e]ntano'],
       },
     },
   },
@@ -975,6 +1099,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['sto', 'stai', 'sta', 'stiamo', 'state', 'stanno'],
+        accentForms: ['st[o]', 'st[a]i', 'st[a]', 'st[i]amo', 'st[a]te', 'st[a]nno'],
         progressiveForms: ['sto stando', 'stai stando', 'sta stando', 'stiamo stando', 'state stando', 'stanno stando'],
       },
       passatoProssimo: {
@@ -993,6 +1118,14 @@ export const VERBS = [
           ['siete stati', 'siete state'],
           ['sono stati', 'sono state'],
         ],
+        accentForms: [
+          ['s[o]no st[a]to', 's[o]no st[a]ta'],
+          ['s[e]i st[a]to', 's[e]i st[a]ta'],
+          ['[è] st[a]to', '[è] st[a]ta'],
+          ['s[i]amo st[a]ti', 's[i]amo st[a]te'],
+          ['si[e]te st[a]ti', 'si[e]te st[a]te'],
+          ['s[o]no st[a]ti', 's[o]no st[a]te'],
+        ],
       },
       imperfetto: {
         type: 'simple',
@@ -1003,6 +1136,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['stavo', 'stavi', 'stava', 'stavamo', 'stavate', 'stavano'],
+        accentForms: ['st[a]vo', 'st[a]vi', 'st[a]va', 'stav[a]mo', 'stav[a]te', 'st[a]vano'],
         progressiveForms: ['stavo stando', 'stavi stando', 'stava stando', 'stavamo stando', 'stavate stando', 'stavano stando'],
       },
       passatoRemoto: {
@@ -1014,6 +1148,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['stetti', 'stesti', 'stette', 'stemmo', 'steste', 'stettero'],
+        accentForms: ['st[e]tti', 'st[e]sti', 'st[e]tte', 'st[e]mmo', 'st[e]ste', 'st[e]ttero'],
         progressiveForms: ['stetti stando', 'stesti stando', 'stette stando', 'stemmo stando', 'steste stando', 'stettero stando'],
       },
       trapassatoProssimo: {
@@ -1032,6 +1167,14 @@ export const VERBS = [
           ['eravate stati', 'eravate state'],
           ['erano stati', 'erano state'],
         ],
+        accentForms: [
+          ['[e]ro st[a]to', '[e]ro st[a]ta'],
+          ['[e]ri st[a]to', '[e]ri st[a]ta'],
+          ['[e]ra st[a]to', '[e]ra st[a]ta'],
+          ['erav[a]mo st[a]ti', 'erav[a]mo st[a]te'],
+          ['erav[a]te st[a]ti', 'erav[a]te st[a]te'],
+          ['[e]rano st[a]ti', '[e]rano st[a]te'],
+        ],
       },
       trapassatoRemoto: {
         type: 'compound',
@@ -1049,6 +1192,14 @@ export const VERBS = [
           ['foste stati', 'foste state'],
           ['furono stati', 'furono state'],
         ],
+        accentForms: [
+          ['f[u]i st[a]to', 'f[u]i st[a]ta'],
+          ['f[o]sti st[a]to', 'f[o]sti st[a]ta'],
+          ['f[u] st[a]to', 'f[u] st[a]ta'],
+          ['f[u]mmo st[a]ti', 'f[u]mmo st[a]te'],
+          ['f[o]ste st[a]ti', 'f[o]ste st[a]te'],
+          ['f[u]rono st[a]ti', 'f[u]rono st[a]te'],
+        ],
       },
       futuroSemplice: {
         type: 'simple',
@@ -1059,6 +1210,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['starò', 'starai', 'starà', 'staremo', 'starete', 'staranno'],
+        accentForms: ['star[ò]', 'star[a]i', 'star[à]', 'star[e]mo', 'star[e]te', 'star[a]nno'],
         progressiveForms: ['starò stando', 'starai stando', 'starà stando', 'staremo stando', 'starete stando', 'staranno stando'],
       },
       futuroAnteriore: {
@@ -1077,6 +1229,14 @@ export const VERBS = [
           ['sarete stati', 'sarete state'],
           ['saranno stati', 'saranno state'],
         ],
+        accentForms: [
+          ['sar[ò] st[a]to', 'sar[ò] st[a]ta'],
+          ['sar[a]i st[a]to', 'sar[a]i st[a]ta'],
+          ['sar[à] st[a]to', 'sar[à] st[a]ta'],
+          ['sar[e]mo st[a]ti', 'sar[e]mo st[a]te'],
+          ['sar[e]te st[a]ti', 'sar[e]te st[a]te'],
+          ['sar[a]nno st[a]ti', 'sar[a]nno st[a]te'],
+        ],
       },
       congiuntivoPresente: {
         type: 'simple',
@@ -1087,6 +1247,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['stia', 'stia', 'stia', 'stiamo', 'stiate', 'stiano'],
+        accentForms: ['st[i]a', 'st[i]a', 'st[i]a', 'st[i]amo', 'st[i]ate', 'st[i]ano'],
         progressiveForms: ['stia stando', 'stia stando', 'stia stando', 'stiamo stando', 'stiate stando', 'stiano stando'],
       },
       congiuntivoPassato: {
@@ -1105,6 +1266,14 @@ export const VERBS = [
           ['siate stati', 'siate state'],
           ['siano stati', 'siano state'],
         ],
+        accentForms: [
+          ['s[i]a st[a]to', 's[i]a st[a]ta'],
+          ['s[i]a st[a]to', 's[i]a st[a]ta'],
+          ['s[i]a st[a]to', 's[i]a st[a]ta'],
+          ['s[i]amo st[a]ti', 's[i]amo st[a]te'],
+          ['s[i]ate st[a]ti', 's[i]ate st[a]te'],
+          ['s[i]ano st[a]ti', 's[i]ano st[a]te'],
+        ],
       },
       congiuntivoImperfetto: {
         type: 'simple',
@@ -1115,6 +1284,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['stessi', 'stessi', 'stesse', 'stessimo', 'steste', 'stessero'],
+        accentForms: ['st[e]ssi', 'st[e]ssi', 'st[e]sse', 'st[e]ssimo', 'st[e]ste', 'st[e]ssero'],
         progressiveForms: ['stessi stando', 'stessi stando', 'stesse stando', 'stessimo stando', 'steste stando', 'stessero stando'],
       },
       congiuntivoTrapassato: {
@@ -1133,6 +1303,14 @@ export const VERBS = [
           ['foste stati', 'foste state'],
           ['fossero stati', 'fossero state'],
         ],
+        accentForms: [
+          ['f[o]ssi st[a]to', 'f[o]ssi st[a]ta'],
+          ['f[o]ssi st[a]to', 'f[o]ssi st[a]ta'],
+          ['f[o]sse st[a]to', 'f[o]sse st[a]ta'],
+          ['f[o]ssimo st[a]ti', 'f[o]ssimo st[a]te'],
+          ['f[o]ste st[a]ti', 'f[o]ste st[a]te'],
+          ['f[o]ssero st[a]ti', 'f[o]ssero st[a]te'],
+        ],
       },
       condizionalePresente: {
         type: 'simple',
@@ -1143,6 +1321,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: ['starei', 'staresti', 'starebbe', 'staremmo', 'stareste', 'starebbero'],
+        accentForms: ['star[e]i', 'star[e]sti', 'star[e]bbe', 'star[e]mmo', 'star[e]ste', 'star[e]bbero'],
         progressiveForms: ['starei stando', 'staresti stando', 'starebbe stando', 'staremmo stando', 'stareste stando', 'starebbero stando'],
       },
       condizionalePassato: {
@@ -1161,6 +1340,14 @@ export const VERBS = [
           ['sareste stati', 'sareste state'],
           ['sarebbero stati', 'sarebbero state'],
         ],
+        accentForms: [
+          ['sar[e]i st[a]to', 'sar[e]i st[a]ta'],
+          ['sar[e]sti st[a]to', 'sar[e]sti st[a]ta'],
+          ['sar[e]bbe st[a]to', 'sar[e]bbe st[a]ta'],
+          ['sar[e]mmo st[a]ti', 'sar[e]mmo st[a]te'],
+          ['sar[e]ste st[a]ti', 'sar[e]ste st[a]te'],
+          ['sar[e]bbero st[a]ti', 'sar[e]bbero st[a]te'],
+        ],
       },
       imperativo: {
         type: 'simple',
@@ -1171,6 +1358,7 @@ export const VERBS = [
         voice: null,
         audio: null,
         forms: [null, 'sta\'', 'stia', 'stiamo', 'state', 'stiano'],
+        accentForms: [null, 'st[a]\'', 'st[i]a', 'st[i]amo', 'st[a]te', 'st[i]ano'],
       },
     },
   },
