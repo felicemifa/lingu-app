@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { TENSES } from '../../constants/tenses';
 import { PRONOUN_ORDERS } from '../../constants/pronouns';
 import { getStem } from '../../utils/getStem';
 import { parseAccentForm } from '../../utils/parseAccent';
+import { speak, cancel as cancelSpeech, isSupported as ttsSupported } from '../../utils/tts';
 import { getPracticeConfig, setPracticeConfig } from '../../data/practiceConfig';
 import { F, FJ } from '../../constants/fonts';
 
@@ -125,19 +126,62 @@ export default function ReviewScreen() {
   // ── practice-style state ──
   const [pair, setPair] = useState(() => (hasPronoun ? null : pickRandomPair()));
 
+  // ── TTS state ──
+  const ttsAvailable = ttsSupported();
+  const [isPlayingAll, setIsPlayingAll] = useState(false);
+  const playTokenRef = useRef(0);
+
+  // 画面離脱時に再生停止
+  useEffect(() => {
+    return () => {
+      playTokenRef.current++;
+      cancelSpeech();
+    };
+  }, []);
+
+  const playQueue = useCallback((items, myToken, onDone) => {
+    const next = (i) => {
+      if (playTokenRef.current !== myToken) return;
+      if (i >= items.length) {
+        onDone?.();
+        return;
+      }
+      speak(items[i], { onEnd: () => next(i + 1) });
+    };
+    next(0);
+  }, []);
+
+  const stopAll = useCallback(() => {
+    playTokenRef.current++;
+    cancelSpeech();
+    setIsPlayingAll(false);
+  }, []);
+
+  const handlePlayForm = useCallback(
+    (form) => {
+      stopAll();
+      const items = Array.isArray(form) ? form.filter(Boolean) : [form];
+      const myToken = ++playTokenRef.current;
+      playQueue(items, myToken, undefined);
+    },
+    [playQueue, stopAll],
+  );
+
   const handleGoHome = useCallback(() => {
     router.navigate('/');
   }, [router]);
 
   const handleNextCross = useCallback(() => {
+    stopAll();
     const v = pickRandomVerb();
     if (v) setCrossVerb(v);
-  }, []);
+  }, [stopAll]);
 
   const handleNextPractice = useCallback(() => {
+    stopAll();
     const p = pickRandomPair();
     if (p) setPair(p);
-  }, []);
+  }, [stopAll]);
 
   const handlePracticeCross = useCallback(() => {
     if (!crossVerb) return;
@@ -195,6 +239,28 @@ export default function ReviewScreen() {
     const getAccentForm = (tenseKey) =>
       verb.tenses[tenseKey].accentForms?.[crossPronounIndex];
 
+    const handlePlayAllCross = () => {
+      if (isPlayingAll) {
+        stopAll();
+        return;
+      }
+      const pronoun = PRONOUNS[crossPronounIndex];
+      const items = [];
+      tenseKeys.forEach((tenseKey) => {
+        const f = getForm(tenseKey);
+        if (f === null) return;
+        items.push(pronoun);
+        if (Array.isArray(f)) f.forEach((x) => items.push(x));
+        else items.push(f);
+      });
+      if (items.length === 0) return;
+      const myToken = ++playTokenRef.current;
+      setIsPlayingAll(true);
+      playQueue(items, myToken, () => {
+        if (playTokenRef.current === myToken) setIsPlayingAll(false);
+      });
+    };
+
     return (
       <SafeAreaView style={styles.safeArea}>
         {/* ヘッダー */}
@@ -212,7 +278,10 @@ export default function ReviewScreen() {
             <TouchableOpacity
               key={p}
               style={[styles.chip, i === crossPronounIndex && styles.chipActive]}
-              onPress={() => setCrossPronounIndex(i)}
+              onPress={() => {
+                stopAll();
+                setCrossPronounIndex(i);
+              }}
               activeOpacity={0.7}
             >
               <Text
@@ -226,6 +295,26 @@ export default function ReviewScreen() {
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* 全て再生ボタン */}
+        {ttsAvailable && (
+          <View style={styles.playAllRow}>
+            <TouchableOpacity
+              style={[styles.playAllButton, isPlayingAll && styles.playAllButtonActive]}
+              onPress={handlePlayAllCross}
+              activeOpacity={0.8}
+            >
+              <Text
+                style={[
+                  styles.playAllButtonText,
+                  isPlayingAll && styles.playAllButtonTextActive,
+                ]}
+              >
+                {isPlayingAll ? '■ 停止' : '▶ 全て再生'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* 時制ごとの表示 */}
         <ScrollView
@@ -248,26 +337,37 @@ export default function ReviewScreen() {
                 >
                   {TENSES[tenseKey].label}
                 </Text>
-                <View style={styles.inputWrapperCross}>
-                  {isNull ? (
-                    <>
-                      <Text style={styles.nullPlaceholder}>—</Text>
-                      <View
-                        style={[styles.underline, { backgroundColor: '#EEEEEE' }]}
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <FormDisplay
-                        form={form}
-                        accentForm={accentForm}
-                        stem={stem}
-                        canSplit={rowCanSplit}
-                      />
-                      <View
-                        style={[styles.underline, { backgroundColor: '#CCCCCC' }]}
-                      />
-                    </>
+                <View style={styles.rowCrossInner}>
+                  <View style={[styles.inputWrapperCross, { flex: 1 }]}>
+                    {isNull ? (
+                      <>
+                        <Text style={styles.nullPlaceholder}>—</Text>
+                        <View
+                          style={[styles.underline, { backgroundColor: '#EEEEEE' }]}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <FormDisplay
+                          form={form}
+                          accentForm={accentForm}
+                          stem={stem}
+                          canSplit={rowCanSplit}
+                        />
+                        <View
+                          style={[styles.underline, { backgroundColor: '#CCCCCC' }]}
+                        />
+                      </>
+                    )}
+                  </View>
+                  {!isNull && ttsAvailable && (
+                    <TouchableOpacity
+                      style={styles.rowPlayButton}
+                      onPress={() => handlePlayForm(form)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.rowPlayButtonText}>▶</Text>
+                    </TouchableOpacity>
                   )}
                 </View>
               </View>
@@ -314,6 +414,27 @@ export default function ReviewScreen() {
   const stem = getStem(verb);
   const canSplit = !verb.irregular && !isCompound && stem !== '';
 
+  const handlePlayAllPractice = () => {
+    if (isPlayingAll) {
+      stopAll();
+      return;
+    }
+    const items = [];
+    PRONOUNS.forEach((pronoun, i) => {
+      const f = forms[i];
+      if (f === null) return;
+      items.push(pronoun);
+      if (Array.isArray(f)) f.forEach((x) => items.push(x));
+      else items.push(f);
+    });
+    if (items.length === 0) return;
+    const myToken = ++playTokenRef.current;
+    setIsPlayingAll(true);
+    playQueue(items, myToken, () => {
+      if (playTokenRef.current === myToken) setIsPlayingAll(false);
+    });
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       {/* ヘッダー */}
@@ -332,6 +453,26 @@ export default function ReviewScreen() {
           </Text>
         </View>
       </View>
+
+      {/* 全て再生ボタン */}
+      {ttsAvailable && (
+        <View style={styles.playAllRow}>
+          <TouchableOpacity
+            style={[styles.playAllButton, isPlayingAll && styles.playAllButtonActive]}
+            onPress={handlePlayAllPractice}
+            activeOpacity={0.8}
+          >
+            <Text
+              style={[
+                styles.playAllButtonText,
+                isPlayingAll && styles.playAllButtonTextActive,
+              ]}
+            >
+              {isPlayingAll ? '■ 停止' : '▶ 全て再生'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* 人称ごとの表示 */}
       <ScrollView
@@ -374,6 +515,15 @@ export default function ReviewScreen() {
                   </>
                 )}
               </View>
+              {!isNull && ttsAvailable && (
+                <TouchableOpacity
+                  style={styles.rowPlayButton}
+                  onPress={() => handlePlayForm(form)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.rowPlayButtonText}>▶</Text>
+                </TouchableOpacity>
+              )}
             </View>
           );
         })}
@@ -526,6 +676,11 @@ const styles = StyleSheet.create({
   rowCross: {
     marginBottom: 12,
   },
+  rowCrossInner: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 8,
+  },
   tenseLabel: {
     fontSize: 13,
     color: '#888888',
@@ -607,6 +762,46 @@ const styles = StyleSheet.create({
     color: '#888888',
     fontSize: 14,
     fontFamily: FJ.regular,
+  },
+
+  // ── TTS buttons ──
+  playAllRow: {
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  playAllButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#4CAF50',
+    backgroundColor: '#FFFFFF',
+  },
+  playAllButtonActive: {
+    backgroundColor: '#4CAF50',
+  },
+  playAllButtonText: {
+    fontSize: 14,
+    fontFamily: FJ.semiBold,
+    color: '#4CAF50',
+  },
+  playAllButtonTextActive: {
+    color: '#FFFFFF',
+  },
+  rowPlayButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F4FAE8',
+    marginBottom: 2,
+  },
+  rowPlayButtonText: {
+    fontSize: 12,
+    color: '#4CAF50',
   },
 
   // ── Empty state ──
