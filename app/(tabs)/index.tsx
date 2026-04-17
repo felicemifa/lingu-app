@@ -465,8 +465,6 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* 下部余白 */}
-        <View style={{ height: 100 }} />
       </ScrollView>
 
       {/* ──── スタートボタン ──── */}
@@ -741,10 +739,6 @@ const styles = StyleSheet.create({
 
   // ── Start button ──
   buttonArea: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     paddingHorizontal: 24,
     paddingBottom: 32,
     paddingTop: 12,
