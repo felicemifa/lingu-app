@@ -194,7 +194,12 @@ export default function HomeScreen() {
   const matchCount = effectiveTenseKeys.size;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView
+      style={[
+        styles.safeArea,
+        Platform.OS === 'web' && { height: '100vh' },
+      ]}
+    >
       <ScrollView
         style={[styles.scroll, Platform.OS === 'web' && { overflowY: 'auto' }]}
         contentContainerStyle={styles.scrollContent}
@@ -504,7 +509,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 16,
+    paddingBottom: 32,
   },
   header: {
     backgroundColor: '#F4FAE8',
