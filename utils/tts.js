@@ -38,18 +38,11 @@ async function getItalianVoice() {
   if (cachedVoice !== null) return cachedVoice || null;
 
   const voices = await loadVoices();
-  // Priority:
-  // 1. name contains 'Google' and lang starts with 'it'
-  // 2. name contains 'Alice' and lang starts with 'it'
-  // 3. any voice whose lang starts with 'it'
+  // Only use Google's Italian voice. If not found, return null (no playback).
   const google = voices.find(
     (v) => v.name && v.lang && v.name.includes('Google') && v.lang.startsWith('it'),
   );
-  const alice = voices.find(
-    (v) => v.name && v.lang && v.name.includes('Alice') && v.lang.startsWith('it'),
-  );
-  const anyItalian = voices.find((v) => v.lang && v.lang.startsWith('it'));
-  cachedVoice = google || alice || anyItalian || false;
+  cachedVoice = google || false;
   return cachedVoice || null;
 }
 
@@ -57,8 +50,14 @@ async function getItalianVoice() {
  * Speak a single phrase. Returns a promise that resolves when done.
  * Cancels any pending utterance before speaking.
  */
-export function speak(text, { onEnd, onError } = {}) {
+export async function speak(text, { onEnd, onError } = {}) {
   if (!isSupported() || !text) {
+    onEnd?.();
+    return;
+  }
+  // Require Google Italian voice — if unavailable, skip playback.
+  const voice = await getItalianVoice();
+  if (!voice) {
     onEnd?.();
     return;
   }
@@ -66,12 +65,7 @@ export function speak(text, { onEnd, onError } = {}) {
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = 'it-IT';
   utter.rate = 0.95;
-
-  // Voice assignment is async — but utterance can still be queued, voice applied on speak
-  getItalianVoice().then((voice) => {
-    if (voice) utter.voice = voice;
-  });
-
+  utter.voice = voice;
   utter.onend = () => onEnd?.();
   utter.onerror = (e) => {
     onError?.(e);
