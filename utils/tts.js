@@ -38,13 +38,18 @@ async function getItalianVoice() {
   if (cachedVoice !== null) return cachedVoice || null;
 
   const voices = await loadVoices();
-  const italian = voices.filter(
-    (v) => v.lang && v.lang.toLowerCase().startsWith('it'),
+  // Priority:
+  // 1. name contains 'Google' and lang starts with 'it'
+  // 2. name contains 'Alice' and lang starts with 'it'
+  // 3. any voice whose lang starts with 'it'
+  const google = voices.find(
+    (v) => v.name && v.lang && v.name.includes('Google') && v.lang.startsWith('it'),
   );
-  // Prefer female-sounding names (common Italian female voice names across OS/browsers)
-  const femalePattern = /female|donna|alice|elsa|federica|paola|carla|silvia|isabella/i;
-  const female = italian.find((v) => femalePattern.test(v.name));
-  cachedVoice = female || italian[0] || false;
+  const alice = voices.find(
+    (v) => v.name && v.lang && v.name.includes('Alice') && v.lang.startsWith('it'),
+  );
+  const anyItalian = voices.find((v) => v.lang && v.lang.startsWith('it'));
+  cachedVoice = google || alice || anyItalian || false;
   return cachedVoice || null;
 }
 
