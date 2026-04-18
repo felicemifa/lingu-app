@@ -7,7 +7,7 @@ import {
   ScrollView,
   SafeAreaView,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { VERBS } from '../../data/verbs';
 import { TENSES } from '../../constants/tenses';
 import { PRONOUN_ORDERS } from '../../constants/pronouns';
@@ -138,6 +138,24 @@ export default function ReviewScreen() {
       cancelSpeech();
     };
   }, []);
+
+  // 画面フォーカス時に最新の config を読み直して state を再同期
+  // （タブ切替などで画面がアンマウントされないため state が古くなる問題を防ぐ）
+  useFocusEffect(
+    useCallback(() => {
+      const c = getPracticeConfig();
+      const hp =
+        c.selectedPronounIndex !== null && c.selectedPronounIndex !== undefined;
+      if (hp) {
+        setCrossPronounIndex(c.selectedPronounIndex);
+        setCrossVerb(pickRandomVerb());
+        setPair(null);
+      } else {
+        setPair(pickRandomPair());
+        setCrossVerb(null);
+      }
+    }, []),
+  );
 
   const playQueue = useCallback((items, myToken, onDone) => {
     const next = (i) => {
