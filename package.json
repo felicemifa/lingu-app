@@ -8,6 +8,10 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "web:edge": "BROWSER='/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge' expo start --web",
+    "web:chrome": "BROWSER='/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' expo start --web",
+    "web:safari": "BROWSER=safari expo start --web",
+    "web:none": "BROWSER=none expo start --web",
     "lint": "expo lint"
   },
   "dependencies": {
